@@ -59,6 +59,9 @@ type Clock is uint128;
 /// as 2^{depth} + indexAtDepth.
 type Position is uint128;
 
+/// @notice A `Bond` represents the amount of collateral that a user has locked up in a claim.
+type Bond is uint256;
+
 /// @notice A `GameType` represents the type of game being played.
 type GameType is uint8;
 

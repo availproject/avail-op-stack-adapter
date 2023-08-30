@@ -75,6 +75,9 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
     /// @notice An internal mapping to allow for constant-time lookups of existing claims.
     mapping(ClaimHash => bool) internal claims;
 
+    /// @notice An internal mapping of subgames rooted at a claim index to other claim indices in the subgame.
+    mapping(uint256 => uint256[]) internal subgames;
+
     /// @param _gameType The type ID of the game.
     /// @param _absolutePrestate The absolute prestate of the instruction trace.
     /// @param _maxGameDepth The maximum depth of bisection.
@@ -170,6 +173,8 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
         // Set the parent claim as countered. We do not need to append a new claim to the game;
         // instead, we can just set the existing parent as countered.
         parent.countered = true;
+
+        // TODO(BOND): Pay msg.sender an amount equal to the bond of the countered parent
     }
 
     /// @notice Internal move function, used by both `attack` and `defend`.
@@ -234,6 +239,8 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
         if (claims[claimHash]) revert ClaimAlreadyExists();
         claims[claimHash] = true;
 
+        // TODO(BOND): Revert if bond is undercollaterized
+
         // Create the new claim.
         claimData.push(
             ClaimData({
@@ -247,6 +254,9 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
 
         // Set the parent claim as countered.
         claimData[_challengeIndex].countered = true;
+
+        // Update the subgame rooted at the parent claim.
+        subgames[_challengeIndex].push(claimData.length - 1);
 
         // Emit the appropriate event for the attack or defense.
         emit Move(_challengeIndex, _claim, msg.sender);
@@ -405,6 +415,68 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
 
         // Update the game status
         emit Resolved(status = status_);
+    }
+
+    /// @inheritdoc IFaultDisputeGame
+    function resolveClaim(uint256 _claimIndex) external {
+        // TODO(BOND): this function should be payable to incentivize callers to resolve claims
+
+        // TODO(inphi): We can avoid the subgames mapping by requiring resolvers to provide the subgame indices themselves.
+        // Since claims contain references to their parent, we can prove that the supplied indices are correct.
+        // We still need to prove that the supplied indices are complete. This is easily done by tracking the number of
+        // nodes in each subgame (in ClaimData).
+        // Lastly, we need to prove that the supplied claims were already resolved. Again, solvable by tracking resolution
+        // status of every claim.
+
+        // INVARIANT: Resolution cannot occur unless the game is currently in progress.
+        if (status != GameStatus.IN_PROGRESS) revert GameNotInProgress();
+
+        ClaimData storage parent = claimData[_claimIndex];
+
+        // INVARIANT: Cannot resolve a subgame unless the clock of its root has expired
+        if (
+            Duration.unwrap(parent.clock.duration()) + (block.timestamp - Timestamp.unwrap(parent.clock.timestamp()))
+                <= Duration.unwrap(GAME_DURATION) >> 1
+        ) {
+            revert ClockNotExpired();
+        }
+
+        uint256[] storage challengeIndices = subgames[_claimIndex];
+
+        // INVARIANT: Cannot resolve already resolved subgames
+        // Note that uncontested claims are implicitly resolved
+        if (challengeIndices.length == 0) revert ClaimAlreadyResolved();
+
+        // Assume parent is honest until proven otherwise
+        bool countered = false;
+
+        for (uint i = 0; i < challengeIndices.length; ++i) {
+            uint256 challengeIndex = challengeIndices[i];
+
+            // INVARIANT: Cannot resolve a subgame containing an unresolved claim
+            if (subgames[challengeIndex].length != 0) revert OutOfOrderResolution();
+
+            ClaimData storage claim = claimData[challengeIndex];
+
+            // Ignore false claims
+            if (!claim.countered) {
+                countered == true;
+                break;
+            }
+        }
+
+        parent.countered = countered;
+
+        // TODO(BOND): Distribute the parent bond to winners
+
+        // Resolved subgames have no nodes
+        delete subgames[_claimIndex];
+
+        // Update status if we're done
+        if (_claimIndex == 0) {
+            status = parent.countered ? GameStatus.CHALLENGER_WINS : GameStatus.DEFENDER_WINS;
+            emit Resolved(status);
+        }
     }
 
     /// @inheritdoc IDisputeGame

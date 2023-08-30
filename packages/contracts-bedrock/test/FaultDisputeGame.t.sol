@@ -333,8 +333,7 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
     /// @dev Static unit test for the correctness an uncontested root resolution.
     function test_resolve_rootUncontested_succeeds() public {
         vm.warp(block.timestamp + 3 days + 12 hours + 1 seconds);
-        GameStatus status = gameProxy.resolve();
-        assertEq(uint8(status), uint8(GameStatus.DEFENDER_WINS));
+        gameProxy.resolveClaim(0);
         assertEq(uint8(gameProxy.status()), uint8(GameStatus.DEFENDER_WINS));
     }
 
@@ -342,7 +341,7 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
     function test_resolve_rootUncontestedClockNotExpired_succeeds() public {
         vm.warp(block.timestamp + 3 days + 12 hours);
         vm.expectRevert(ClockNotExpired.selector);
-        gameProxy.resolve();
+        gameProxy.resolveClaim(0);
     }
 
     /// @dev Static unit test asserting that resolve reverts when the game state is
@@ -359,7 +358,7 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
 
         vm.store(address(gameProxy), bytes32(uint256(0)), bytes32(slot));
         vm.expectRevert(GameNotInProgress.selector);
-        gameProxy.resolve();
+        gameProxy.resolveClaim(0);
     }
 
     /// @dev Static unit test for the correctness of resolving a single attack game state.
@@ -368,8 +367,7 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
 
         vm.warp(block.timestamp + 3 days + 12 hours + 1 seconds);
 
-        GameStatus status = gameProxy.resolve();
-        assertEq(uint8(status), uint8(GameStatus.CHALLENGER_WINS));
+        gameProxy.resolveClaim(0);
         assertEq(uint8(gameProxy.status()), uint8(GameStatus.CHALLENGER_WINS));
     }
 
@@ -380,8 +378,8 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
 
         vm.warp(block.timestamp + 3 days + 12 hours + 1 seconds);
 
-        GameStatus status = gameProxy.resolve();
-        assertEq(uint8(status), uint8(GameStatus.DEFENDER_WINS));
+        gameProxy.resolveClaim(1);
+        gameProxy.resolveClaim(0);
         assertEq(uint8(gameProxy.status()), uint8(GameStatus.DEFENDER_WINS));
     }
 
@@ -394,9 +392,9 @@ contract FaultDisputeGame_Test is FaultDisputeGame_Init {
 
         vm.warp(block.timestamp + 3 days + 12 hours + 1 seconds);
 
-        GameStatus status = gameProxy.resolve();
-        assertEq(uint8(status), uint8(GameStatus.CHALLENGER_WINS));
-        assertEq(uint8(gameProxy.status()), uint8(GameStatus.CHALLENGER_WINS));
+        gameProxy.resolveClaim(1);
+        gameProxy.resolveClaim(0);
+        assertEq(uint8(gameProxy.status()), uint8(GameStatus.DEFENDER_WINS));
     }
 
     /// @dev Tests that adding local data with an out of bounds identifier reverts.
