@@ -75,7 +75,7 @@ func NewService(ctx context.Context, logger log.Logger, cfg *config.Config) (*Se
 			return fault.NewGamePlayer(ctx, logger, cfg, dir, addr, txMgr, client)
 		})
 
-	monitor := newGameMonitor(logger, cl, loader, sched, cfg.GameWindow, client.BlockNumber, cfg.GameAllowlist)
+	monitor := newGameMonitor(logger, cl, loader, sched, cfg.GameWindow, client.BlockNumber, cfg.GameAllowlist, client)
 
 	m.RecordInfo(version.SimpleWithMeta)
 	m.RecordUp()
@@ -89,8 +89,8 @@ func NewService(ctx context.Context, logger log.Logger, cfg *config.Config) (*Se
 }
 
 // MonitorGame monitors the fault dispute game and attempts to progress it.
-func (s *Service) MonitorGame(ctx context.Context) error {
+func (s *Service) MonitorGame(ctx context.Context) {
 	s.sched.Start(ctx)
 	defer s.sched.Close()
-	return s.monitor.MonitorGames(ctx)
+	s.monitor.MonitorGames(ctx)
 }

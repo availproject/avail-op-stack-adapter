@@ -19,5 +19,6 @@ func Main(ctx context.Context, logger log.Logger, cfg *config.Config) error {
 		return fmt.Errorf("failed to create the fault service: %w", err)
 	}
 
-	return service.MonitorGame(ctx)
+	service.MonitorGame(ctx)
+	return nil
 }

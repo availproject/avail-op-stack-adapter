@@ -9,7 +9,11 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-challenger/game/scheduler"
 	"github.com/ethereum-optimism/optimism/op-service/clock"
+	"github.com/ethereum-optimism/optimism/op-service/eth"
+
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -32,6 +36,8 @@ type gameMonitor struct {
 	gameWindow       time.Duration
 	fetchBlockNumber blockNumberFetcher
 	allowedGames     []common.Address
+	l1HeadsSub       ethereum.Subscription
+	l1Source         eth.NewHeadSource
 }
 
 func newGameMonitor(
@@ -42,6 +48,7 @@ func newGameMonitor(
 	gameWindow time.Duration,
 	fetchBlockNumber blockNumberFetcher,
 	allowedGames []common.Address,
+	l1Source eth.NewHeadSource,
 ) *gameMonitor {
 	return &gameMonitor{
 		logger:           logger,
@@ -51,6 +58,7 @@ func newGameMonitor(
 		gameWindow:       gameWindow,
 		fetchBlockNumber: fetchBlockNumber,
 		allowedGames:     allowedGames,
+		l1Source:         l1Source,
 	}
 }
 
@@ -99,29 +107,35 @@ func (m *gameMonitor) progressGames(ctx context.Context, blockNum uint64) error 
 	return nil
 }
 
-func (m *gameMonitor) MonitorGames(ctx context.Context) error {
+func (m *gameMonitor) MonitorGames(ctx context.Context) {
 	m.logger.Info("Monitoring fault dispute games")
 
-	blockNum := uint64(0)
+	onNewL1Head := func(ctx context.Context, sig eth.L1BlockRef) {
+		if err := m.progressGames(ctx, sig.Number); err != nil {
+			m.logger.Error("Failed to progress games", "err", err)
+		}
+	}
+
+	resubFn := func(innerCtx context.Context, err error) (event.Subscription, error) {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if err != nil {
+			m.logger.Warn("resubscribing after failed L1 subscription", "err", err)
+		}
+		return eth.WatchHeadChanges(ctx, m.l1Source, onNewL1Head)
+	}
+
+	m.l1HeadsSub = event.ResubscribeErr(10*time.Second, resubFn)
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			nextBlockNum, err := m.fetchBlockNumber(ctx)
-			if err != nil {
-				m.logger.Error("Failed to load current block number", "err", err)
-				continue
+			return
+		case err, ok := <-m.l1HeadsSub.Err():
+			if !ok {
+				return
 			}
-			if nextBlockNum > blockNum {
-				blockNum = nextBlockNum
-				if err := m.progressGames(ctx, nextBlockNum); err != nil {
-					m.logger.Error("Failed to progress games", "err", err)
-				}
-			}
-			if err := m.clock.SleepCtx(ctx, time.Second); err != nil {
-				return err
-			}
+			m.logger.Error("l1 heads subscription error", "err", err)
 		}
 	}
 }
