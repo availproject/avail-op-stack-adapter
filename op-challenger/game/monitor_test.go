@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	// "github.com/ethereum-optimism/optimism/op-e2e/e2eutils/wait"
+	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils/wait"
 	"github.com/ethereum-optimism/optimism/op-node/testlog"
 	"github.com/ethereum-optimism/optimism/op-service/clock"
 
@@ -45,60 +45,56 @@ func TestMonitorMinGameTimestamp(t *testing.T) {
 
 // TestMonitorGames tests that the monitor can handle a new head event
 // and resubscribe to new heads if the subscription errors.
-// func TestMonitorGames(t *testing.T) {
-// 	addr1 := common.Address{0xaa}
-// 	addr2 := common.Address{0xbb}
-// 	monitor, source, games, _, mockHeadSource := setupMonitorTest(t, []common.Address{})
-//
-// 	source.games = []FaultDisputeGame{newFDG(addr1, 9999), newFDG(addr2, 9999)}
-//
-// 	ctx, cancel := context.WithCancel(context.Background())
-// 	defer cancel()
-// 	monitor.MonitorGames(ctx)
-//
-// 	// Wait for a new header to be received
-// 	waitErr := wait.For(context.Background(), 500*time.Millisecond, func() (bool, error) {
-// 		if len(games.created) >= 2 {
-// 			return true, nil
-// 		}
-// 		if mockHeadSource.sub == nil {
-// 			return false, nil
-// 		}
-// 		mockHeadSource.sub.headers <- &ethtypes.Header{
-// 			Number: big.NewInt(1),
-// 		}
-// 		return false, nil
-// 	})
-// 	require.NoError(t, waitErr)
-//
-// 	// Manually zero out the game players
-// 	games.created = make(map[common.Address]*stubGame)
-// 	monitor.players = make(map[common.Address]gamePlayer)
-//
-// 	// Send a subscription error
-// 	require.NotNil(t, mockHeadSource.sub, "subscription should exist")
-// 	mockHeadSource.sub.errChan <- ethereum.NotFound
-//
-// 	// Wait for a resubscription
-// 	waitErr = wait.For(context.Background(), 500*time.Millisecond, func() (bool, error) {
-// 		if len(games.created) >= 2 {
-// 			return true, nil
-// 		}
-// 		if mockHeadSource.sub == nil {
-// 			return false, nil
-// 		}
-// 		mockHeadSource.sub.headers <- &ethtypes.Header{
-// 			Number: big.NewInt(1),
-// 		}
-// 		return false, nil
-// 	})
-// 	require.NoError(t, waitErr)
-// 	require.Len(t, games.created, 2, "should create game agents")
-// 	require.Contains(t, games.created, addr1)
-// 	require.Contains(t, games.created, addr2)
-// 	require.Equal(t, 1, games.created[addr1].progressCount)
-// 	require.Equal(t, 1, games.created[addr2].progressCount)
-// }
+func TestMonitorGames(t *testing.T) {
+	addr1 := common.Address{0xaa}
+	addr2 := common.Address{0xbb}
+	monitor, source, sched, mockHeadSource := setupMonitorTest(t, []common.Address{})
+
+	source.games = []FaultDisputeGame{newFDG(addr1, 9999), newFDG(addr2, 9999)}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go monitor.MonitorGames(ctx)
+
+	// Wait for a new header to be received
+	waitErr := wait.For(context.Background(), 500*time.Millisecond, func() (bool, error) {
+		if len(sched.scheduled) >= 1 {
+			return true, nil
+		}
+		if mockHeadSource.sub == nil {
+			return false, nil
+		}
+		mockHeadSource.sub.headers <- &ethtypes.Header{
+			Number: big.NewInt(1),
+		}
+		return false, nil
+	})
+	require.NoError(t, waitErr)
+
+	// Manually zero out the game players
+	sched.scheduled = make([][]common.Address, 0)
+
+	// Send a subscription error
+	require.NotNil(t, mockHeadSource.sub, "subscription should exist")
+	mockHeadSource.sub.errChan <- ethereum.NotFound
+
+	// Wait for a resubscription
+	waitErr = wait.For(context.Background(), 500*time.Millisecond, func() (bool, error) {
+		if len(sched.scheduled) >= 1 {
+			return true, nil
+		}
+		if mockHeadSource.sub == nil {
+			return false, nil
+		}
+		mockHeadSource.sub.headers <- &ethtypes.Header{
+			Number: big.NewInt(1),
+		}
+		return false, nil
+	})
+	require.NoError(t, waitErr)
+	require.Len(t, sched.scheduled, 1)
+	require.ElementsMatch(t, sched.scheduled[0], []common.Address{addr1, addr2})
+}
 
 func TestMonitorCreateAndProgressGameAgents(t *testing.T) {
 	monitor, source, sched, _ := setupMonitorTest(t, []common.Address{})
