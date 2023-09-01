@@ -4,6 +4,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/ethereum-optimism/optimism/indexer/config"
 	_ "github.com/ethereum-optimism/optimism/indexer/database/serializers"
@@ -61,6 +62,11 @@ func NewDB(dbConfig config.DBConfig) (*DB, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to database after multiple retries")
 	}
+
+	if err := db.executeSQLMigration(); err != nil {
+		return nil, errors.Wrap(err, "failed to execute SQL migration")
+	}
+
 	return db, nil
 }
 
@@ -90,4 +96,15 @@ func dbFromGormTx(tx *gorm.DB) *DB {
 		BridgeMessages:     newBridgeMessagesDB(tx),
 		BridgeTransactions: newBridgeTransactionsDB(tx),
 	}
+}
+
+func (db *DB) executeSQLMigration() error {
+	file, err := os.ReadFile("migrations/20230523_create_schema.sql")
+	if err != nil {
+		return errors.Wrap(err, "Error reading SQL file")
+	}
+	if err := db.gorm.Exec(string(file)).Error; err != nil {
+		return errors.Wrap(err, "Error executing SQL script")
+	}
+	return nil
 }
