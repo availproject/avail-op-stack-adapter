@@ -579,6 +579,26 @@ contract GamePlayer {
         }
     }
 
+    /// @notice Auto-resolves the entire game
+    function autoResolve() public {
+        bool[] memory contests;
+
+        for (uint i = gameProxy.claimDataLen()-1; i > 0; i--) {
+            (uint32 parentIndex,,,Position position,) = gameProxy.claimData(i);
+            if (position.depth() == gameProxy.MAX_GAME_DEPTH()) {
+                continue;
+            }
+            // TODO(BOND): For now we avoid contesting implicitly resolved subgames.
+            // But once bond payoffs are implemented, this needs to resolve such subgames as well.
+            contests[parentIndex] = true;
+
+            if (contests[i]) {
+                gameProxy.resolveClaim(i);
+            }
+        }
+        gameProxy.resolveClaim(0);
+    }
+
     /// @notice Returns the state at the trace index within the player's trace.
     function traceAt(Position _position) public view returns (uint256 state_) {
         return traceAt(_position.traceIndex(maxDepth));
@@ -644,7 +664,8 @@ contract FaultDisputeGame_ResolvesCorrectly_IncorrectRoot1 is OneVsOne_Arena {
 
         // Resolve the game and assert that the honest player challenged the root
         // claim successfully.
-        assertEq(uint8(gameProxy.resolve()), uint8(GameStatus.CHALLENGER_WINS));
+        gameProxy.resolveClaim(0);
+        assertEq(uint8(gameProxy.status()), uint8(GameStatus.CHALLENGER_WINS));
         assertFalse(defender.failedToStep());
     }
 }

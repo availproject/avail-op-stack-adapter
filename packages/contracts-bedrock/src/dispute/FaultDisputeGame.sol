@@ -445,6 +445,7 @@ contract FaultDisputeGame is IFaultDisputeGame, Clone, Semver {
 
         // INVARIANT: Cannot resolve already resolved subgames
         // Note that uncontested claims are implicitly resolved
+        // TODO(BOND): Bond payoffs for implicitly resolved subgames not at MAX_DEPTH
         if (challengeIndices.length == 0) revert ClaimAlreadyResolved();
 
         // Assume parent is honest until proven otherwise
