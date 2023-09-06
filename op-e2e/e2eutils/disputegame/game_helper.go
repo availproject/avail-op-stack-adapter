@@ -65,16 +65,16 @@ func (g *FaultGameHelper) MaxDepth(ctx context.Context) int64 {
 }
 
 func (g *FaultGameHelper) waitForClaim(ctx context.Context, errorMsg string, predicate func(claim ContractClaim) bool) {
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	timedCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	err := wait.For(ctx, time.Second, func() (bool, error) {
-		count, err := g.game.ClaimDataLen(&bind.CallOpts{Context: ctx})
+	err := wait.For(timedCtx, time.Second, func() (bool, error) {
+		count, err := g.game.ClaimDataLen(&bind.CallOpts{Context: timedCtx})
 		if err != nil {
 			return false, fmt.Errorf("retrieve number of claims: %w", err)
 		}
 		// Search backwards because the new claims are at the end and more likely the ones we want.
 		for i := count.Int64() - 1; i >= 0; i-- {
-			claimData, err := g.game.ClaimData(&bind.CallOpts{Context: ctx}, big.NewInt(i))
+			claimData, err := g.game.ClaimData(&bind.CallOpts{Context: timedCtx}, big.NewInt(i))
 			if err != nil {
 				return false, fmt.Errorf("retrieve claim %v: %w", i, err)
 			}

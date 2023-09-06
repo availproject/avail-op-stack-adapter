@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum-optimism/optimism/cannon/mipsevm"
 	"github.com/ethereum-optimism/optimism/op-bindings/bindings"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/deployer"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
@@ -97,6 +98,10 @@ func NewFactoryHelper(t *testing.T, ctx context.Context, deployments *genesis.L1
 }
 
 func (h *FactoryHelper) StartAlphabetGame(ctx context.Context, claimedAlphabet string) *AlphabetGameHelper {
+	return h.StartAlphabetGameWithVmStatus(ctx, claimedAlphabet, mipsevm.VMStatusInvalid)
+}
+
+func (h *FactoryHelper) StartAlphabetGameWithVmStatus(ctx context.Context, claimedAlphabet string, vmStatus uint8) *AlphabetGameHelper {
 	l2BlockNumber := h.waitForProposals(ctx)
 	l1Head := h.checkpointL1Block(ctx)
 
@@ -106,6 +111,7 @@ func (h *FactoryHelper) StartAlphabetGame(ctx context.Context, claimedAlphabet s
 	trace := alphabet.NewTraceProvider(claimedAlphabet, alphabetGameDepth)
 	rootClaim, err := trace.Get(ctx, lastAlphabetTraceIndex)
 	h.require.NoError(err, "get root claim")
+	rootClaim[0] = vmStatus // Override the VM status
 	extraData := make([]byte, 64)
 	binary.BigEndian.PutUint64(extraData[24:], l2BlockNumber)
 	binary.BigEndian.PutUint64(extraData[56:], l1Head.Uint64())
@@ -179,6 +185,9 @@ func (h *FactoryHelper) StartCannonGameWithCorrectRoot(ctx context.Context, roll
 	provider := cannon.NewTraceProviderFromInputs(testlog.Logger(h.t, log.LvlInfo).New("role", "CorrectTrace"), metrics.NoopMetrics, cfg, inputs, cfg.Datadir)
 	rootClaim, err := provider.Get(ctx, math.MaxUint64)
 	h.require.NoError(err, "Compute correct root hash")
+	// Override the VM status to claim the root is invalid
+	// Otherwise creating the game will fail
+	rootClaim[0] = mipsevm.VMStatusInvalid
 
 	game := h.createCannonGame(ctx, l2BlockNumber, l1Head, rootClaim)
 	honestHelper := &HonestHelper{

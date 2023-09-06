@@ -3,7 +3,9 @@ package op_e2e
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/ethereum-optimism/optimism/cannon/mipsevm"
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils/challenger"
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils/disputegame"
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils/wait"
@@ -228,15 +230,60 @@ func TestChallengerCompleteDisputeGame(t *testing.T) {
 				challenger.WithPrivKey(sys.cfg.Secrets.Alice),
 			)
 
+			if !test.expectStep {
+				// Nasty but the test become intermittent when it fails if the final step isn't expected
+				// Wait for the max depth to be reached, then give time for a step call to be made (should fail)
+				// Then check the final claim hasn't been countered again before time travelling
+				game.WaitForClaimAtMaxDepth(ctx, test.expectStep)
+				time.Sleep(15 * time.Second)
+			}
+
 			// Wait for a claim at the maximum depth that has been countered to indicate we're ready to resolve the game
 			game.WaitForClaimAtMaxDepth(ctx, test.expectStep)
 
 			sys.TimeTravelClock.AdvanceTime(gameDuration)
 			require.NoError(t, wait.ForNextBlock(ctx, l1Client))
 
+			game.LogGameData(ctx)
 			game.WaitForGameStatus(ctx, test.expectedResult)
+			game.LogGameData(ctx)
 		})
 	}
+}
+
+func TestAlphabetTraceWithCorrectRootClaim(t *testing.T) {
+	InitParallel(t)
+
+	ctx := context.Background()
+	sys, l1Client := startFaultDisputeSystem(t)
+	t.Cleanup(sys.Close)
+
+	disputeGameFactory := disputegame.NewFactoryHelper(t, ctx, sys.cfg.L1Deployments, l1Client)
+	// Use the correct alphabet, but change the commitment to indicate its invalid.
+	game := disputeGameFactory.StartAlphabetGameWithVmStatus(ctx, disputegame.CorrectAlphabet, mipsevm.VMStatusInvalid)
+	require.NotNil(t, game)
+	gameDuration := game.GameDuration(ctx)
+
+	game.StartChallenger(ctx, sys.NodeEndpoint("l1"), "Defender",
+		challenger.WithAgreeProposedOutput(false),
+		challenger.WithPrivKey(sys.cfg.Secrets.Mallory),
+	)
+
+	game.StartChallenger(ctx, sys.NodeEndpoint("l1"), "Challenger",
+		// Agree with the proposed output, so disagree with the root claim
+		challenger.WithAgreeProposedOutput(true),
+		challenger.WithAlphabet(disputegame.CorrectAlphabet),
+		challenger.WithPrivKey(sys.cfg.Secrets.Alice),
+	)
+
+	// Wait for a claim at the maximum depth that has been countered to indicate we're ready to resolve the game
+	game.WaitForClaimAtMaxDepth(ctx, true)
+
+	sys.TimeTravelClock.AdvanceTime(gameDuration)
+	require.NoError(t, wait.ForNextBlock(ctx, l1Client))
+
+	// Root claim should be found to be invalid.
+	game.WaitForGameStatus(ctx, disputegame.StatusChallengerWins)
 }
 
 func TestCannonDisputeGame(t *testing.T) {
@@ -356,7 +403,6 @@ func TestCannonDefendStep(t *testing.T) {
 }
 
 func TestCannonChallengeWithCorrectRoot(t *testing.T) {
-	t.Skip("Not currently handling this case as the correct approach will change when output root bisection is added")
 	InitParallel(t)
 
 	ctx := context.Background()
