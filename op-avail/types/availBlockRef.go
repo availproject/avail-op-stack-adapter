@@ -3,14 +3,12 @@ package avail_types
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 type AvailBlockRef struct {
-	BlockHash string         // Hash for block on avail chain
-	Sender    string         // sender address to filter extrinsic out sepecifically for this address
-	Nonce     types.UCompact // nonce to filter specific extrinsic
+	BlockHash string // Hash for block on avail chain
+	Sender    string // sender address to filter extrinsic out sepecifically for this address
+	Nonce     int64  // nonce to filter specific extrinsic
 }
 
 func (a *AvailBlockRef) MarshalToBinary() ([]byte, error) {

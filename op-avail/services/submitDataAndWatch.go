@@ -9,8 +9,8 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/config"
-	avail_types "github.com/ethereum-optimism/optimism/op-avail/internal/types"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/utils"
+	avail_types "github.com/ethereum-optimism/optimism/op-avail/types"
 )
 
 // submitData creates a transaction and makes a Avail data submission
@@ -115,14 +115,14 @@ func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
 	fmt.Println("Data of lenght :", len(data), "submitted by op-stack with address ", keyringPair.Address, " using appID ", appID)
 
 	defer sub.Unsubscribe()
-	timeout := time.After(50 * time.Second)
+	timeout := time.After(100 * time.Second)
 	for {
 		select {
 		case status := <-sub.Chan():
-			if status.IsInBlock {
-				fmt.Printf("Txn inside block %v\n", status.AsInBlock.Hex())
+			if status.IsFinalized {
+				fmt.Printf("Txn inside finalized block %v\n", status.AsFinalized.Hex())
+				return avail_types.AvailBlockRef{BlockHash: string(status.AsFinalized.Hex()), Sender: keyringPair.Address, Nonce: o.Nonce.Int64()}, nil
 			}
-			return avail_types.AvailBlockRef{BlockHash: status.AsInBlock.Hex(), Sender: keyringPair.Address, Nonce: o.Nonce}, nil
 		case <-timeout:
 			fmt.Printf("timeout of 100 seconds reached without getting finalized status for extrinsic")
 			return avail_types.AvailBlockRef{}, errors.New("Timitout before getting finalized status")

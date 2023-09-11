@@ -158,7 +158,8 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 	}
 
 	// To pass the data on avail for batcher
-	if candidate.To.Hex() == "0xfF00000000000000000000000000000000042069" {
+	if candidate.To.Hex() == "0xFf00000000000000000000000000000000042069" {
+		fmt.Println("Working on batch submission for avail")
 
 		// Submitting data to Avail
 		avail_Blk_Ref, err := avail.SubmitDataAndWatch(candidate.TxData)
@@ -168,13 +169,13 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 
 		fmt.Printf("Avail Block Reference: %+v", avail_Blk_Ref)
 
-		// ref_bytes_Data, err := avail_Blk_Ref.MarshalToBinary()
-		// if err != nil {
-		// 	panic(fmt.Sprintf("cannot get the binary form of avail block reference:%v", err))
-		// }
+		ref_bytes_Data, err := avail_Blk_Ref.MarshalToBinary()
+		if err != nil {
+			panic(fmt.Sprintf("cannot get the binary form of avail block reference:%v", err))
+		}
 
-		// To add reference on ethereum layer
-		// candidate = TxCandidate{TxData: ref_bytes_Data, To: candidate.To, GasLimit: candidate.GasLimit}
+		//To add reference on ethereum layer
+		candidate = TxCandidate{TxData: ref_bytes_Data, To: candidate.To, GasLimit: candidate.GasLimit}
 	}
 
 	tx, err := m.craftTx(ctx, candidate)
