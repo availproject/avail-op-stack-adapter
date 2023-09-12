@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	avail "github.com/ethereum-optimism/optimism/op-avail/services"
+	avail "github.com/ethereum-optimism/optimism/op-avail/avail"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -159,23 +159,13 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 
 	// To pass the data on avail for batcher
 	if candidate.To.Hex() == "0xFf00000000000000000000000000000000042069" {
-		fmt.Println("Working on batch submission for avail")
-
-		// Submitting data to Avail
-		avail_Blk_Ref, err := avail.SubmitDataAndWatch(candidate.TxData)
+		// Submit transaction data on Data and get reference to submit on ethereum layer
+		refData, err := avail.SubmitTxDataAndGetRef(candidate.TxData)
 		if err != nil {
-			panic(fmt.Sprintf("cannot submit data:%v", err))
+			panic(err)
 		}
-
-		fmt.Printf("Avail Block Reference: %+v", avail_Blk_Ref)
-
-		ref_bytes_Data, err := avail_Blk_Ref.MarshalToBinary()
-		if err != nil {
-			panic(fmt.Sprintf("cannot get the binary form of avail block reference:%v", err))
-		}
-
 		//To add reference on ethereum layer
-		candidate = TxCandidate{TxData: ref_bytes_Data, To: candidate.To, GasLimit: candidate.GasLimit}
+		candidate = TxCandidate{TxData: refData, To: candidate.To, GasLimit: candidate.GasLimit}
 	}
 
 	tx, err := m.craftTx(ctx, candidate)

@@ -1,4 +1,4 @@
-package avail_types
+package types
 
 import (
 	"encoding/json"

@@ -7,14 +7,14 @@ import (
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	gsrpc_types "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/config"
+	"github.com/ethereum-optimism/optimism/op-avail/internal/types"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/utils"
-	avail_types "github.com/ethereum-optimism/optimism/op-avail/types"
 )
 
 // submitData creates a transaction and makes a Avail data submission
-func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
+func SubmitDataAndWatch(data []byte) (types.AvailBlockRef, error) {
 
 	var config config.Config
 	err := config.GetConfig("../op-avail/config.json")
@@ -30,13 +30,13 @@ func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
 	api, err := gsrpc.NewSubstrateAPI(ApiURL)
 	if err != nil {
 		fmt.Printf("cannot create api: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	meta, err := api.RPC.State.GetMetadataLatest()
 	if err != nil {
 		fmt.Printf("cannot get metadata: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	appID := 0
@@ -45,56 +45,56 @@ func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
 		appID = AppID
 	}
 
-	c, err := types.NewCall(meta, "DataAvailability.submit_data", types.NewBytes([]byte(data)))
+	c, err := gsrpc_types.NewCall(meta, "DataAvailability.submit_data", gsrpc_types.NewBytes([]byte(data)))
 	if err != nil {
 		fmt.Printf("cannot create new call: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	// Create the extrinsic
-	ext := types.NewExtrinsic(c)
+	ext := gsrpc_types.NewExtrinsic(c)
 
 	genesisHash, err := api.RPC.Chain.GetBlockHash(0)
 	if err != nil {
 		fmt.Printf("cannot get block hash: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	rv, err := api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
 		fmt.Printf("cannot get runtime version: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	keyringPair, err := signature.KeyringPairFromSecret(Seed, 42)
 	if err != nil {
 		fmt.Printf("cannot create LeyPair: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
-	key, err := types.CreateStorageKey(meta, "System", "Account", keyringPair.PublicKey)
+	key, err := gsrpc_types.CreateStorageKey(meta, "System", "Account", keyringPair.PublicKey)
 	if err != nil {
 		fmt.Printf("cannot create storage key: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
-	var accountInfo types.AccountInfo
+	var accountInfo gsrpc_types.AccountInfo
 	ok, err := api.RPC.State.GetStorageLatest(key, &accountInfo)
 	if err != nil || !ok {
 		fmt.Printf("cannot get latest storage: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	nonce := utils.GetAccountNonce(uint32(accountInfo.Nonce))
 	//fmt.Println("Nonce from localDatabase:", nonce, "    ::::::::   from acountInfo:", accountInfo.Nonce)
-	o := types.SignatureOptions{
+	o := gsrpc_types.SignatureOptions{
 		BlockHash:          genesisHash,
-		Era:                types.ExtrinsicEra{IsMortalEra: false},
+		Era:                gsrpc_types.ExtrinsicEra{IsMortalEra: false},
 		GenesisHash:        genesisHash,
-		Nonce:              types.NewUCompactFromUInt(uint64(nonce)),
+		Nonce:              gsrpc_types.NewUCompactFromUInt(uint64(nonce)),
 		SpecVersion:        rv.SpecVersion,
-		Tip:                types.NewUCompactFromUInt(0),
-		AppID:              types.NewUCompactFromUInt(uint64(appID)),
+		Tip:                gsrpc_types.NewUCompactFromUInt(0),
+		AppID:              gsrpc_types.NewUCompactFromUInt(uint64(appID)),
 		TransactionVersion: rv.TransactionVersion,
 	}
 
@@ -102,14 +102,14 @@ func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
 	err = ext.Sign(keyringPair, o)
 	if err != nil {
 		fmt.Printf("cannot sign: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	// Send the extrinsic
 	sub, err := api.RPC.Author.SubmitAndWatchExtrinsic(ext)
 	if err != nil {
 		fmt.Printf("cannot submit extrinsic: error:%v", err)
-		return avail_types.AvailBlockRef{}, err
+		return types.AvailBlockRef{}, err
 	}
 
 	fmt.Println("Data of lenght :", len(data), "submitted by op-stack with address ", keyringPair.Address, " using appID ", appID)
@@ -121,11 +121,11 @@ func SubmitDataAndWatch(data []byte) (avail_types.AvailBlockRef, error) {
 		case status := <-sub.Chan():
 			if status.IsFinalized {
 				fmt.Printf("Txn inside finalized block %v\n", status.AsFinalized.Hex())
-				return avail_types.AvailBlockRef{BlockHash: string(status.AsFinalized.Hex()), Sender: keyringPair.Address, Nonce: o.Nonce.Int64()}, nil
+				return types.AvailBlockRef{BlockHash: string(status.AsFinalized.Hex()), Sender: keyringPair.Address, Nonce: o.Nonce.Int64()}, nil
 			}
 		case <-timeout:
 			fmt.Printf("timeout of 100 seconds reached without getting finalized status for extrinsic")
-			return avail_types.AvailBlockRef{}, errors.New("Timitout before getting finalized status")
+			return types.AvailBlockRef{}, errors.New("Timitout before getting finalized status")
 		}
 	}
 }

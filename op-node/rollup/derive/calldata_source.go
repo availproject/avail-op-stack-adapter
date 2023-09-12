@@ -11,9 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
-	avail "github.com/ethereum-optimism/optimism/op-avail/services"
-
-	avail_types "github.com/ethereum-optimism/optimism/op-avail/types"
+	avail "github.com/ethereum-optimism/optimism/op-avail/avail"
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
@@ -124,20 +122,13 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
 				continue // not an authorized batch submitter, ignore
 			}
 
-			//Getting Avail block reference from callData
-			avail_blk_ref := avail_types.AvailBlockRef{}
-			err = avail_blk_ref.UnmarshalFromBinary(tx.Data())
+			// Get Transaction data from da reference
+			txData, err := avail.GetTxDataByDARef(tx.Data())
 			if err != nil {
-				panic(fmt.Errorf("Failed to unmarshal the ethereum trxn data to avail block refrence, error:%v", err))
-			}
-			fmt.Printf("Avail Block Reference: %+v", avail_blk_ref)
-
-			trxn_data, err := avail.GetBlockExtrinsicData(avail_blk_ref)
-			if err != nil {
-				panic(fmt.Errorf("Failed to get block extrinsic data, error:%v", err))
+				panic(err)
 			}
 
-			out = append(out, trxn_data)
+			out = append(out, txData)
 		}
 	}
 	return out

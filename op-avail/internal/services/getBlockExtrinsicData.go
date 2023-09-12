@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	gsrpc_types "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/config"
-	avail_types "github.com/ethereum-optimism/optimism/op-avail/types"
+	"github.com/ethereum-optimism/optimism/op-avail/internal/types"
 	"github.com/vedhavyas/go-subkey"
 )
 
 // GetBlock: To fetch the extrinsic Data from block's extrinsic by hash
-func GetBlockExtrinsicData(avail_blk_ref avail_types.AvailBlockRef) ([]byte, error) {
+func GetBlockExtrinsicData(avail_blk_ref types.AvailBlockRef) ([]byte, error) {
 
 	var config config.Config
 	err := config.GetConfig("../op-avail/config.json")
@@ -33,7 +33,7 @@ func GetBlockExtrinsicData(avail_blk_ref avail_types.AvailBlockRef) ([]byte, err
 	}
 
 	// Converting this string type hash into types.hash type
-	blk_hash, err := types.NewHashFromHexString(Hash)
+	blk_hash, err := gsrpc_types.NewHashFromHexString(Hash)
 	if err != nil {
 		return []byte{}, fmt.Errorf("unable to convert string hash into types.hash, error:%v", err)
 	}
