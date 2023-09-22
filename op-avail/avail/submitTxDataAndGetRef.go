@@ -9,6 +9,11 @@ import (
 func SubmitTxDataAndGetRef(TxData []byte) ([]byte, error) {
 	fmt.Println("Working on batch submission for avail")
 
+	//Checking for the size of TxData
+	if len(TxData) >= 512000 {
+		return []byte{}, fmt.Errorf("size of TxData is more than 512KB, it is higher than a single data submit transaction supports on avail")
+	}
+
 	// Submitting data to Avail
 	avail_Blk_Ref, err := service.SubmitDataAndWatch(TxData)
 	if err != nil {
