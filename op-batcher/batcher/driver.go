@@ -398,9 +398,9 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txDat
 
 	if l.Rollup.DAEnabled {
 		// Submit transaction data on Data and get reference to submit on ethereum layer
-		refData, err := avail.SubmitTxDataAndGetRef(data)
+		refData, err := avail.SubmitTxDataAndGetRef(data, l.log)
 		if err != nil {
-			l.log.Error("failed to submit txData on avail, error:", err)
+			l.log.Error("failed to submit txData on avail", "err", err)
 			return
 		}
 		//To add reference on ethereum layer

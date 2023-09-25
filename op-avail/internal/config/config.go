@@ -7,10 +7,9 @@ import (
 )
 
 type Config struct {
-	Seed    string `json:"seed"`
-	ApiURL  string `json:"api_url"`
-	AppID   int    `json:"app_id"`
-	Address string `json:"address"`
+	Seed   string `json:"seed"`
+	ApiURL string `json:"api_url"`
+	AppID  int    `json:"app_id"`
 }
 
 func (c *Config) GetConfig(configFileName string) error {

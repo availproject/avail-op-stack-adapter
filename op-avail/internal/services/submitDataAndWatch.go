@@ -11,14 +11,17 @@ import (
 	"github.com/ethereum-optimism/optimism/op-avail/internal/config"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/types"
 	"github.com/ethereum-optimism/optimism/op-avail/internal/utils"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // submitData creates a transaction and makes a Avail data submission
-func SubmitDataAndWatch(data []byte) (types.AvailBlockRef, error) {
+func SubmitDataAndWatch(data []byte, l log.Logger) (types.AvailBlockRef, error) {
 
+	//Load variables
 	var config config.Config
 	err := config.GetConfig("../op-avail/config.json")
 	if err != nil {
+		l.Error("Unable to create config variable for op-avail")
 		panic(fmt.Sprintf("cannot get config:%v", err))
 	}
 
@@ -27,6 +30,7 @@ func SubmitDataAndWatch(data []byte) (types.AvailBlockRef, error) {
 	Seed := config.Seed
 	AppID := config.AppID
 
+	//Creating new substrate api
 	api, err := gsrpc.NewSubstrateAPI(ApiURL)
 	if err != nil {
 		fmt.Printf("cannot create api: error:%v", err)
@@ -112,7 +116,7 @@ func SubmitDataAndWatch(data []byte) (types.AvailBlockRef, error) {
 		return types.AvailBlockRef{}, err
 	}
 
-	fmt.Println("Data of lenght :", len(data), "submitted by op-stack with address ", keyringPair.Address, " using appID ", appID)
+	l.Info("Tx batch is submitted to Avail", "length", len(data), "address", keyringPair.Address, "appID", appID)
 
 	defer sub.Unsubscribe()
 	timeout := time.After(100 * time.Second)
@@ -120,11 +124,9 @@ func SubmitDataAndWatch(data []byte) (types.AvailBlockRef, error) {
 		select {
 		case status := <-sub.Chan():
 			if status.IsFinalized {
-				fmt.Printf("Txn inside finalized block %v\n", status.AsFinalized.Hex())
 				return types.AvailBlockRef{BlockHash: string(status.AsFinalized.Hex()), Sender: keyringPair.Address, Nonce: o.Nonce.Int64()}, nil
 			}
 		case <-timeout:
-			fmt.Printf("timeout of 100 seconds reached without getting finalized status for extrinsic")
 			return types.AvailBlockRef{}, errors.New("Timitout before getting finalized status")
 		}
 	}
