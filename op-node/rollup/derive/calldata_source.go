@@ -122,13 +122,17 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
 				continue // not an authorized batch submitter, ignore
 			}
 
-			// Get Transaction data from da reference
-			txData, err := avail.GetTxDataByDARef(tx.Data())
-			if err != nil {
-				panic(err)
+			if config.DAEnabled {
+				// Get Transaction data from da reference
+				txData, err := avail.GetTxDataByDARef(tx.Data(), log)
+				if err != nil {
+					log.Error("unable to retrieve the data back from Avail", "index", j, "err", err)
+					panic("Failed to get TxData from Avail block ref")
+				}
+				out = append(out, txData)
+			} else {
+				out = append(out, tx.Data())
 			}
-
-			out = append(out, txData)
 		}
 	}
 	return out

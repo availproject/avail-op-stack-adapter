@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	avail "github.com/ethereum-optimism/optimism/op-avail/avail"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -155,17 +154,6 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, m.cfg.TxSendTimeout)
 		defer cancel()
-	}
-
-	// To pass the data on avail for batcher
-	if candidate.To.Hex() == "0xFf00000000000000000000000000000000042069" {
-		// Submit transaction data on Data and get reference to submit on ethereum layer
-		refData, err := avail.SubmitTxDataAndGetRef(candidate.TxData)
-		if err != nil {
-			panic(err)
-		}
-		//To add reference on ethereum layer
-		candidate = TxCandidate{TxData: refData, To: candidate.To, GasLimit: candidate.GasLimit}
 	}
 
 	tx, err := m.craftTx(ctx, candidate)
