@@ -5,6 +5,7 @@ ARG VERSION=v0.0.0
 RUN apk add --no-cache make gcc musl-dev linux-headers git jq bash
 
 # build op-node with the shared go.mod & go.sum files
+COPY ./op-avail /app/op-avail
 COPY ./op-node /app/op-node
 COPY ./op-chain-ops /app/op-chain-ops
 COPY ./op-service /app/op-service
