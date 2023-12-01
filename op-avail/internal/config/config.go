@@ -6,13 +6,13 @@ import (
 	"os"
 )
 
-type Config struct {
+type DAConfig struct {
 	Seed   string `json:"seed"`
 	ApiURL string `json:"api_url"`
 	AppID  int    `json:"app_id"`
 }
 
-func (c *Config) GetConfig(configFileName string) error {
+func (c *DAConfig) GetConfig(configFileName string) error {
 
 	jsonFile, err := os.Open(configFileName)
 	if err != nil {

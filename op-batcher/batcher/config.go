@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 
+	"github.com/ethereum-optimism/optimism/op-avail/avail"
 	"github.com/ethereum-optimism/optimism/op-batcher/compressor"
 	"github.com/ethereum-optimism/optimism/op-batcher/flags"
 	"github.com/ethereum-optimism/optimism/op-batcher/metrics"
@@ -25,7 +26,9 @@ type Config struct {
 	L1Client   *ethclient.Client
 	L2Client   *ethclient.Client
 	RollupNode *sources.RollupClient
-	TxManager  txmgr.TxManager
+	AvailDA    *avail.AvailDA
+
+	TxManager txmgr.TxManager
 
 	NetworkTimeout         time.Duration
 	PollInterval           time.Duration
