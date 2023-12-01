@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 
+	"github.com/ethereum-optimism/optimism/op-avail/avail"
 	"github.com/ethereum-optimism/optimism/op-node/client"
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/metrics"
@@ -32,6 +33,7 @@ type OpNode struct {
 
 	l1Source  *sources.L1Client     // L1 Client to fetch data from
 	l2Driver  *driver.Driver        // L2 Engine to Sync
+	AvailDA   *avail.AvailDA        // Avail DA to Sync
 	l2Source  *sources.EngineClient // L2 Execution Engine RPC bindings
 	rpcSync   *sources.SyncClient   // Alt-sync RPC client, optional (may be nil)
 	server    *rpcServer            // RPC server hosting the rollup-node API
@@ -84,6 +86,12 @@ func (n *OpNode) init(ctx context.Context, cfg *Config, snapshotLog log.Logger) 
 	if err := n.initRuntimeConfig(ctx, cfg); err != nil {
 		return err
 	}
+
+	//Initialization of Avail DA
+	if err := n.initAvailDA(ctx, cfg); err != nil {
+		return err
+	}
+
 	if err := n.initL2(ctx, cfg, snapshotLog); err != nil {
 		return err
 	}
@@ -96,6 +104,7 @@ func (n *OpNode) init(ctx context.Context, cfg *Config, snapshotLog log.Logger) 
 	if err := n.initP2P(ctx, cfg); err != nil {
 		return err
 	}
+
 	// Only expose the server at the end, ensuring all RPC backend components are initialized.
 	if err := n.initRPCServer(ctx, cfg); err != nil {
 		return err
@@ -103,6 +112,15 @@ func (n *OpNode) init(ctx context.Context, cfg *Config, snapshotLog log.Logger) 
 	if err := n.initMetricsServer(ctx, cfg); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (n *OpNode) initAvailDA(ctx context.Context, cfg *Config) error {
+	availDA, err := avail.NewAvailDA()
+	if err != nil {
+		return err
+	}
+	n.AvailDA = availDA
 	return nil
 }
 
@@ -199,7 +217,7 @@ func (n *OpNode) initL2(ctx context.Context, cfg *Config, snapshotLog log.Logger
 		return err
 	}
 
-	n.l2Driver = driver.NewDriver(&cfg.Driver, &cfg.Rollup, n.l2Source, n.l1Source, n, n, n.log, snapshotLog, n.metrics, cfg.ConfigPersistence)
+	n.l2Driver = driver.NewDriver(&cfg.Driver, &cfg.Rollup, n.l2Source, n.l1Source, n.AvailDA, n, n, n.log, snapshotLog, n.metrics, cfg.ConfigPersistence)
 
 	return nil
 }

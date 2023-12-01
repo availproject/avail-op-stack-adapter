@@ -15,27 +15,17 @@ import (
 )
 
 // submitData creates a transaction and makes a Avail data submission
-func SubmitDataAndWatch(data []byte, l log.Logger) (types.AvailBlockRef, error) {
+func SubmitDataAndWatch(api *gsrpc.SubstrateAPI, config config.DAConfig, data []byte) (types.AvailBlockRef, error) {
 
-	//Load variables
-	var config config.Config
-	err := config.GetConfig("../op-avail/config.json")
-	if err != nil {
-		l.Error("Unable to create config variable for op-avail")
-		panic(fmt.Sprintf("cannot get config:%v", err))
-	}
-
-	//Intitializing variables
-	ApiURL := config.ApiURL
 	Seed := config.Seed
 	AppID := config.AppID
 
-	//Creating new substrate api
-	api, err := gsrpc.NewSubstrateAPI(ApiURL)
-	if err != nil {
-		fmt.Printf("cannot create api: error:%v", err)
-		return types.AvailBlockRef{}, err
-	}
+	// //Creating new substrate api
+	// api, err := gsrpc.NewSubstrateAPI(ApiURL)
+	// if err != nil {
+	// 	fmt.Printf("cannot create api: error:%v", err)
+	// 	return types.AvailBlockRef{}, err
+	// }
 
 	meta, err := api.RPC.State.GetMetadataLatest()
 	if err != nil {
@@ -116,7 +106,7 @@ func SubmitDataAndWatch(data []byte, l log.Logger) (types.AvailBlockRef, error) 
 		return types.AvailBlockRef{}, err
 	}
 
-	l.Info("Tx batch is submitted to Avail", "length", len(data), "address", keyringPair.Address, "appID", appID)
+	log.Info("Tx batch is submitted to Avail", "length", len(data), "address", keyringPair.Address, "appID", appID)
 
 	defer sub.Unsubscribe()
 	timeout := time.After(100 * time.Second)

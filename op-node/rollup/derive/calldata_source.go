@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/ethereum-optimism/optimism/op-node/eth"
+	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-
-	avail "github.com/ethereum-optimism/optimism/op-avail/avail"
-
-	"github.com/ethereum-optimism/optimism/op-node/eth"
-	"github.com/ethereum-optimism/optimism/op-node/rollup"
 )
 
 type DataIter interface {
@@ -29,18 +26,19 @@ type L1TransactionFetcher interface {
 // batch submitter transactions.
 // This is not a stage in the pipeline, but a wrapper for another stage in the pipeline
 type DataSourceFactory struct {
-	log     log.Logger
-	cfg     *rollup.Config
-	fetcher L1TransactionFetcher
+	log            log.Logger
+	cfg            *rollup.Config
+	fetcher        L1TransactionFetcher
+	availDAFetcher AvailDAFetcher
 }
 
-func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1TransactionFetcher) *DataSourceFactory {
-	return &DataSourceFactory{log: log, cfg: cfg, fetcher: fetcher}
+func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1TransactionFetcher, availDAFetcher AvailDAFetcher) *DataSourceFactory {
+	return &DataSourceFactory{log: log, cfg: cfg, fetcher: fetcher, availDAFetcher: availDAFetcher}
 }
 
 // OpenData returns a DataIter. This struct implements the `Next` function.
 func (ds *DataSourceFactory) OpenData(ctx context.Context, id eth.BlockID, batcherAddr common.Address) DataIter {
-	return NewDataSource(ctx, ds.log, ds.cfg, ds.fetcher, id, batcherAddr)
+	return NewDataSource(ctx, ds.log, ds.cfg, ds.fetcher, ds.availDAFetcher, id, batcherAddr)
 }
 
 // DataSource is a fault tolerant approach to fetching data.
@@ -51,31 +49,33 @@ type DataSource struct {
 	open bool
 	data []eth.Data
 	// Required to re-attempt fetching
-	id      eth.BlockID
-	cfg     *rollup.Config // TODO: `DataFromEVMTransactions` should probably not take the full config
-	fetcher L1TransactionFetcher
-	log     log.Logger
+	id             eth.BlockID
+	cfg            *rollup.Config // TODO: `DataFromEVMTransactions` should probably not take the full config
+	fetcher        L1TransactionFetcher
+	availDAFetcher AvailDAFetcher
+	log            log.Logger
 
 	batcherAddr common.Address
 }
 
 // NewDataSource creates a new calldata source. It suppresses errors in fetching the L1 block if they occur.
 // If there is an error, it will attempt to fetch the result on the next call to `Next`.
-func NewDataSource(ctx context.Context, log log.Logger, cfg *rollup.Config, fetcher L1TransactionFetcher, block eth.BlockID, batcherAddr common.Address) DataIter {
+func NewDataSource(ctx context.Context, log log.Logger, cfg *rollup.Config, fetcher L1TransactionFetcher, availDAFetcher AvailDAFetcher, block eth.BlockID, batcherAddr common.Address) DataIter {
 	_, txs, err := fetcher.InfoAndTxsByHash(ctx, block.Hash)
 	if err != nil {
 		return &DataSource{
-			open:        false,
-			id:          block,
-			cfg:         cfg,
-			fetcher:     fetcher,
-			log:         log,
-			batcherAddr: batcherAddr,
+			open:           false,
+			id:             block,
+			cfg:            cfg,
+			fetcher:        fetcher,
+			availDAFetcher: availDAFetcher,
+			log:            log,
+			batcherAddr:    batcherAddr,
 		}
 	} else {
 		return &DataSource{
 			open: true,
-			data: DataFromEVMTransactions(cfg, batcherAddr, txs, log.New("origin", block)),
+			data: DataFromEVMTransactions(cfg, availDAFetcher, batcherAddr, txs, log.New("origin", block)),
 		}
 	}
 }
@@ -87,7 +87,7 @@ func (ds *DataSource) Next(ctx context.Context) (eth.Data, error) {
 	if !ds.open {
 		if _, txs, err := ds.fetcher.InfoAndTxsByHash(ctx, ds.id.Hash); err == nil {
 			ds.open = true
-			ds.data = DataFromEVMTransactions(ds.cfg, ds.batcherAddr, txs, log.New("origin", ds.id))
+			ds.data = DataFromEVMTransactions(ds.cfg, ds.availDAFetcher, ds.batcherAddr, txs, log.New("origin", ds.id))
 		} else if errors.Is(err, ethereum.NotFound) {
 			return nil, NewResetError(fmt.Errorf("failed to open calldata source: %w", err))
 		} else {
@@ -106,7 +106,7 @@ func (ds *DataSource) Next(ctx context.Context) (eth.Data, error) {
 // DataFromEVMTransactions filters all of the transactions and returns the calldata from transactions
 // that are sent to the batch inbox address from the batch sender address.
 // This will return an empty array if no valid transactions are found.
-func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, txs types.Transactions, log log.Logger) []eth.Data {
+func DataFromEVMTransactions(config *rollup.Config, availDAFetcher AvailDAFetcher, batcherAddr common.Address, txs types.Transactions, log log.Logger) []eth.Data {
 	var out []eth.Data
 	l1Signer := config.L1Signer()
 	for j, tx := range txs {
@@ -123,17 +123,21 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
 			}
 
 			if config.DAEnabled {
-				// Get Transaction data from da reference
-				txData, err := avail.GetTxDataByDARef(tx.Data(), log)
-				if err != nil {
-					log.Error("unable to retrieve the data back from Avail", "index", j, "err", err)
-					panic("Failed to get TxData from Avail block ref")
-				}
-				out = append(out, txData)
+				out = append(out, DataFromAvailDA(availDAFetcher, tx.Data(), log))
 			} else {
 				out = append(out, tx.Data())
 			}
 		}
 	}
 	return out
+}
+
+func DataFromAvailDA(availDAFetcher AvailDAFetcher, data []byte, log log.Logger) []byte {
+	// Get Transaction data from da reference
+	txData, err := availDAFetcher.GetTxDataByDARef(data)
+	if err != nil {
+		log.Error("unable to retrieve the data back from Avail", "err", err)
+		panic("Failed to get TxData from Avail block ref")
+	}
+	return txData
 }

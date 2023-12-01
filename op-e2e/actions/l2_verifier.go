@@ -55,9 +55,9 @@ type L2API interface {
 	GetProof(ctx context.Context, address common.Address, storage []common.Hash, blockTag string) (*eth.AccountResult, error)
 }
 
-func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher, eng L2API, cfg *rollup.Config) *L2Verifier {
+func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher, availDAFetcher derive.AvailDAFetcher, eng L2API, cfg *rollup.Config) *L2Verifier {
 	metrics := &testutils.TestDerivationMetrics{}
-	pipeline := derive.NewDerivationPipeline(log, cfg, l1, eng, metrics)
+	pipeline := derive.NewDerivationPipeline(log, cfg, l1, availDAFetcher, eng, metrics)
 	pipeline.Reset()
 
 	rollupNode := &L2Verifier{
