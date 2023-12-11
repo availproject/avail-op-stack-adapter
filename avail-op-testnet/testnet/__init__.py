@@ -72,10 +72,10 @@ def generate_accounts_and_network_config(paths):
     run_command(['bash', './avail-op-testnet/deploy.sh'], cwd=paths.mono_repo_dir, env={'PWD': paths.mono_repo_dir})
 
 def funding_avail_op_accounts(paths):
-    # PRIVATE_KEY = os.environ['PRIVATE_KEY']
-    # L1_NODE_URL = os.environ['L1_NODE_URL']
-    PRIVATE_KEY = '3d204eeb8551153115636a3c98b089de1b7f20901c06497482b818ba25558fc2'
-    L1_NODE_URL = "https://eth-goerli.g.alchemy.com/v2/zmvISxoaiFivtoDZHrkB_GEvzBwH5NLT"
+    PRIVATE_KEY = os.environ['FUND_ACCOUNT_PRIVATE_KEY']
+    L1_NODE_URL = os.environ['L1_NODE_URL']
+    # PRIVATE_KEY = ''
+    # L1_NODE_URL = ""
     AMOUNT = '0.1'
     run_command(['node', './avail-op-testnet/fund-accounts.js'], cwd=paths.mono_repo_dir, env={'PWD': paths.mono_repo_dir, 'PRIVATE_KEY': PRIVATE_KEY, 'L1_RPC_URL': L1_NODE_URL, 'AMOUNT': AMOUNT})
 
@@ -165,7 +165,7 @@ def testnet_deploy(paths):
         log.info('Generating L2 genesis and rollup configs.')
         run_command([
             'go', 'run', 'cmd/main.go', 'genesis', 'l2',
-            '--l1-rpc', 'http://localhost:8545',
+            '--l1-rpc', L1_NODE_URL,
             '--deploy-config', testnet_cfg_orig,
             '--deployment-dir', paths.deployment_dir,
             '--outfile.l2', pjoin(paths.testnet_dir, 'genesis-l2.json'),
@@ -177,8 +177,8 @@ def testnet_deploy(paths):
     if os.path.exists(testnet_cfg_backup):
         shutil.move(testnet_cfg_backup, testnet_cfg_orig)
 
-    log.info('Bringing up L2.')
-    run_command(['docker-compose', 'up', '-d', 'l2'], cwd=paths.ops_optimium_dir, env={
+    log.info('Bringing up op-geth(L2 execution enviornment).')
+    run_command(['docker-compose', 'up', '-d', 'op-geth'], cwd=paths.ops_optimium_dir, env={
         'PWD': paths.ops_optimium_dir
     })
     wait_up(9545)
@@ -187,11 +187,15 @@ def testnet_deploy(paths):
     log.info('Bringing up everything else.')
     run_command(['docker-compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher'], cwd=paths.ops_optimium_dir, env={
         'PWD': paths.ops_optimium_dir,
+        'L1_RPC_URL': L1_NODE_URL,
+        'SEQ_PRIVATE_KEY': wallets['Sequencer']['Private key'].split('x')[1],
+        'BATCH_PRIVATE_KEY': wallets['Batcher']['Private key'].split('x')[1],
+        'PROP_PRIVATE_KEY': wallets['Proposer']['Private key'].split('x')[1],
         'L2OO_ADDRESS': addresses['L2OutputOracleProxy'],
         'SEQUENCER_BATCH_INBOX_ADDRESS': rollup_config['batch_inbox_address']
     })
 
-    log.info('Devnet ready.')
+    log.info('Testnet ready.')
 
 
 def wait_for_rpc_server(url):
