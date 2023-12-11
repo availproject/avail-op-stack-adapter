@@ -1,0 +1,14 @@
+{
+  "name": "avail-op-testnet",
+  "version": "1.0.0",
+  "description": "This is a utility for running a local Bedrock devnet. It is designed to replace the legacy Bash-based devnet runner as part of a progressive migration away from Bash automation.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^5.7.0"
+  }
+}

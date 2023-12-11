@@ -73,6 +73,15 @@ nuke: clean devnet-clean
 	git clean -Xdf
 .PHONY: nuke
 
+#Avail-OP testnet
+setup-avail-op-testnet:
+	bash ./avail-op-testnet/deploy.sh
+.PHONY: setup-avail-op-testnet
+
+avail-op-testnet-up:
+	PYTHONPATH=./avail-op-testnet python3 ./avail-op-testnet/main.py --monorepo-dir=. --deploy
+.PHONY: avail-op-testnet-up
+
 devnet-up:
 	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=.
 .PHONY: devnet-up

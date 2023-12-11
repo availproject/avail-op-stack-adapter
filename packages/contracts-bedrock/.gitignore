@@ -1,6 +1,8 @@
 # Ingnore for avail-optimism
 deployments/avail-optimism
+deployments/avail-op-testnet
 deploy-config/avail-optimism.json
+deploy-config/avail-op-testnet.json
 
 artifacts
 forge-artifacts

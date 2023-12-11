@@ -41,6 +41,8 @@ packages/contracts-bedrock/deployments/anvil
 !.env.example
 *.log
 
+# for avail-op-testnet
+.testnet
 .devnet
 
 # Ignore local fuzzing results
