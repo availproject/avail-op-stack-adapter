@@ -39,6 +39,11 @@ var (
 		Usage:   "Rollup chain parameters",
 		EnvVars: prefixEnvVars("ROLLUP_CONFIG"),
 	}
+	AvailDAConfig = &cli.StringFlag{
+		Name:    "avail-da.config",
+		Usage:   "Config for setting up Avail DA",
+		EnvVars: prefixEnvVars("AVAIL_DA_CONFIG"),
+	}
 	Network = &cli.StringFlag{
 		Name:    "network",
 		Usage:   fmt.Sprintf("Predefined network selection. Available networks: %s", strings.Join(chaincfg.AvailableNetworks(), ", ")),
@@ -219,6 +224,7 @@ var (
 var requiredFlags = []cli.Flag{
 	L1NodeAddr,
 	L2EngineAddr,
+	AvailDAConfig,
 }
 
 var optionalFlags = []cli.Flag{

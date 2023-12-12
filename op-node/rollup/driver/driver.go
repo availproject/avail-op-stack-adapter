@@ -46,6 +46,11 @@ type L2Chain interface {
 	L2BlockRefByNumber(ctx context.Context, num uint64) (eth.L2BlockRef, error)
 }
 
+type AvailDA interface {
+	derive.AvailDAFetcher
+	SubmitTxDataAndGetRef(TxData []byte) ([]byte, error)
+}
+
 type DerivationPipeline interface {
 	Reset()
 	Step(ctx context.Context) error
@@ -108,13 +113,13 @@ type SequencerStateListener interface {
 }
 
 // NewDriver composes an events handler that tracks L1 state, triggers L2 derivation, and optionally sequences new L2 blocks.
-func NewDriver(driverCfg *Config, cfg *rollup.Config, l2 L2Chain, l1 L1Chain, altSync AltSync, network Network, log log.Logger, snapshotLog log.Logger, metrics Metrics, sequencerStateListener SequencerStateListener) *Driver {
+func NewDriver(driverCfg *Config, cfg *rollup.Config, l2 L2Chain, l1 L1Chain, availDA AvailDA, altSync AltSync, network Network, log log.Logger, snapshotLog log.Logger, metrics Metrics, sequencerStateListener SequencerStateListener) *Driver {
 	l1 = NewMeteredL1Fetcher(l1, metrics)
 	l1State := NewL1State(log, metrics)
 	sequencerConfDepth := NewConfDepth(driverCfg.SequencerConfDepth, l1State.L1Head, l1)
 	findL1Origin := NewL1OriginSelector(log, cfg, sequencerConfDepth)
 	verifConfDepth := NewConfDepth(driverCfg.VerifierConfDepth, l1State.L1Head, l1)
-	derivationPipeline := derive.NewDerivationPipeline(log, cfg, verifConfDepth, l2, metrics)
+	derivationPipeline := derive.NewDerivationPipeline(log, cfg, verifConfDepth, availDA, l2, metrics)
 	attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, l2)
 	engine := derivationPipeline
 	meteredEngine := NewMeteredEngine(cfg, engine, metrics, log)

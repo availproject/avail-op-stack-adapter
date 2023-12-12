@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 
+	"github.com/ethereum-optimism/optimism/op-avail/avail"
 	"github.com/ethereum-optimism/optimism/op-batcher/compressor"
 	"github.com/ethereum-optimism/optimism/op-batcher/flags"
 	"github.com/ethereum-optimism/optimism/op-batcher/metrics"
@@ -25,7 +26,9 @@ type Config struct {
 	L1Client   *ethclient.Client
 	L2Client   *ethclient.Client
 	RollupNode *sources.RollupClient
-	TxManager  txmgr.TxManager
+	AvailDA    *avail.AvailDA
+
+	TxManager txmgr.TxManager
 
 	NetworkTimeout         time.Duration
 	PollInterval           time.Duration
@@ -58,6 +61,9 @@ type CLIConfig struct {
 
 	// RollupRpc is the HTTP provider URL for the L2 rollup node.
 	RollupRpc string
+
+	// AvailConfig provides the path of config file for setting up avail da
+	AvailConfig string
 
 	// MaxChannelDuration is the maximum duration (in #L1-blocks) to keep a
 	// channel open. This allows to more eagerly send batcher transactions
@@ -123,6 +129,7 @@ func NewConfig(ctx *cli.Context) CLIConfig {
 		RollupRpc:       ctx.String(flags.RollupRpcFlag.Name),
 		SubSafetyMargin: ctx.Uint64(flags.SubSafetyMarginFlag.Name),
 		PollInterval:    ctx.Duration(flags.PollIntervalFlag.Name),
+		AvailConfig:     ctx.String(flags.AvailDAConfigFlag.Name),
 
 		/* Optional Flags */
 		MaxPendingTransactions: ctx.Uint64(flags.MaxPendingTransactionsFlag.Name),

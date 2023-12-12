@@ -34,8 +34,8 @@ type Driver struct {
 	targetBlockNum uint64
 }
 
-func NewDriver(logger log.Logger, cfg *rollup.Config, l1Source derive.L1Fetcher, l2Source L2Source, targetBlockNum uint64) *Driver {
-	pipeline := derive.NewDerivationPipeline(logger, cfg, l1Source, l2Source, metrics.NoopMetrics)
+func NewDriver(logger log.Logger, cfg *rollup.Config, l1Source derive.L1Fetcher, availDAFetcher derive.AvailDAFetcher, l2Source L2Source, targetBlockNum uint64) *Driver {
+	pipeline := derive.NewDerivationPipeline(logger, cfg, l1Source, availDAFetcher, l2Source, metrics.NoopMetrics)
 	pipeline.Reset()
 	return &Driver{
 		logger:         logger,

@@ -14,27 +14,12 @@ import (
 )
 
 // GetBlock: To fetch the extrinsic Data from block's extrinsic by hash
-func GetBlockExtrinsicData(avail_blk_ref types.AvailBlockRef, l log.Logger) ([]byte, error) {
-
-	// Load config
-	var config config.Config
-	err := config.GetConfig("../op-avail/config.json")
-	if err != nil {
-		l.Error("Unable to create config variable for op-avail")
-		panic(fmt.Sprintf("cannot get config:%v", err))
-	}
+func GetBlockExtrinsicData(api *gsrpc.SubstrateAPI, config config.DAConfig, avail_blk_ref types.AvailBlockRef) ([]byte, error) {
 
 	//Intitializing variables
-	ApiURL := config.ApiURL
 	Hash := avail_blk_ref.BlockHash
 	Address := avail_blk_ref.Sender
 	Nonce := avail_blk_ref.Nonce
-
-	//Creating new substrate api
-	api, err := gsrpc.NewSubstrateAPI(ApiURL)
-	if err != nil {
-		return []byte{}, fmt.Errorf("cannot create api:%w", err)
-	}
 
 	// Converting this string type into gsrpc_types.hash type
 	blk_hash, err := gsrpc_types.NewHashFromHexString(Hash)
@@ -53,7 +38,7 @@ func GetBlockExtrinsicData(avail_blk_ref types.AvailBlockRef, l log.Logger) ([]b
 		//Extracting sender address for extrinsic
 		ext_Addr, err := subkey.SS58Address(ext.Signature.Signer.AsID.ToBytes(), 42)
 		if err != nil {
-			l.Error("unable to get sender address from extrinsic", "err", err)
+			log.Error("unable to get sender address from extrinsic", "err", err)
 		}
 		if ext_Addr == Address && ext.Signature.Nonce.Int64() == Nonce {
 			args := ext.Method.Args
