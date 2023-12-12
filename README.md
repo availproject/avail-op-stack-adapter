@@ -2,7 +2,7 @@
 <div align="center">
   <br />
   <br />
-  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="./op-avail/avail-optimism-logo.gif" width=600></a>
+  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="op-avail//specs/assets/avail-optimism-logo.gif" width=600></a>
   <br />
   <h3><a href="https://www.availproject.org/">Avail</a>: Data availability focused blockchain <a href="https://github.com/availproject/avail-op-stack-adapter">X</a> Low-cost and lightning-fast Ethereum L2 blockchain: <a href="https://optimism.io">Optimism</a></h3>
   <br />
@@ -48,7 +48,7 @@ Here **`op-node`**, **`op-geth`**, **`op-batcher`** and **`op-proposer`** are th
 <div align="center">
   <br />
   <br />
-  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="./op-avail/avail-optimism-model.png" width=1000></a>
+  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="op-avail/specs/assets/avail-optimism-model.png" width=1000></a>
   <br />
 </div>
 
