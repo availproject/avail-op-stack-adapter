@@ -1,7 +1,6 @@
 package avail
 
 import (
-	"context"
 	"fmt"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
@@ -26,11 +25,11 @@ type AvailDA struct {
 	api *gsrpc.SubstrateAPI
 }
 
-func NewAvailDA() (*AvailDA, error) {
+func NewAvailDA(path string) (*AvailDA, error) {
 
 	// Load config
 	var cfg config.DAConfig
-	err := cfg.GetConfig("../op-avail/config.json")
+	err := cfg.GetConfig(path)
 	if err != nil {
 		log.Error("Unable to create config variable for op-avail")
 		panic(fmt.Sprintf("cannot get config:%v", err))
@@ -49,7 +48,7 @@ func NewAvailDA() (*AvailDA, error) {
 	}, nil
 }
 
-func (a *AvailDA) SubmitTxDataAndGetRef(ctx context.Context, TxData []byte) ([]byte, error) {
+func (a *AvailDA) SubmitTxDataAndGetRef(TxData []byte) ([]byte, error) {
 	log.Info("Working on batch submission for avail")
 
 	//Checking for the size of TxData

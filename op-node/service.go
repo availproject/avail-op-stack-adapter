@@ -88,6 +88,7 @@ func NewConfig(ctx *cli.Context, log log.Logger) (*node.Config, error) {
 			URL:     ctx.String(flags.HeartbeatURLFlag.Name),
 		},
 		ConfigPersistence: configPersistence,
+		AvailDAConfig:     ctx.String(flags.AvailDAConfig.Name),
 	}
 
 	if err := cfg.LoadPersisted(log); err != nil {

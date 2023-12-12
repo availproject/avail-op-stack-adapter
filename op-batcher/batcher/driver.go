@@ -72,7 +72,7 @@ func NewBatchSubmitterFromCLIConfig(cfg CLIConfig, l log.Logger, m metrics.Metri
 		return nil, fmt.Errorf("querying rollup config: %w", err)
 	}
 
-	availDA, err := avail.NewAvailDA()
+	availDA, err := avail.NewAvailDA(cfg.AvailConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to intialize Avail DA, err:%w", err)
 	}
@@ -404,7 +404,7 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txDat
 
 	if l.Rollup.DAEnabled {
 		// Submit transaction data on Data and get reference to submit on ethereum layer
-		refData, err := l.AvailDA.SubmitTxDataAndGetRef(context.Background(), data)
+		refData, err := l.AvailDA.SubmitTxDataAndGetRef(data)
 		if err != nil {
 			l.log.Error("failed to submit txData on avail", "err", err)
 			return
