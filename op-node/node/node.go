@@ -116,7 +116,7 @@ func (n *OpNode) init(ctx context.Context, cfg *Config, snapshotLog log.Logger) 
 }
 
 func (n *OpNode) initAvailDA(ctx context.Context, cfg *Config) error {
-	availDA, err := avail.NewAvailDA()
+	availDA, err := avail.NewAvailDA(cfg.AvailDAConfig)
 	if err != nil {
 		return err
 	}

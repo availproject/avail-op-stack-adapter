@@ -39,6 +39,11 @@ var (
 		Usage:   "HTTP provider URL for Rollup node",
 		EnvVars: prefixEnvVars("ROLLUP_RPC"),
 	}
+	AvailDAConfigFlag = &cli.StringFlag{
+		Name:    "avail-da.config",
+		Usage:   "Config for setting up Avail DA",
+		EnvVars: prefixEnvVars("AVAIL_DA_CONFIG"),
+	}
 	// Optional flags
 	SubSafetyMarginFlag = &cli.Uint64Flag{
 		Name: "sub-safety-margin",
@@ -85,6 +90,7 @@ var requiredFlags = []cli.Flag{
 	L1EthRpcFlag,
 	L2EthRpcFlag,
 	RollupRpcFlag,
+	AvailDAConfigFlag,
 }
 
 var optionalFlags = []cli.Flag{

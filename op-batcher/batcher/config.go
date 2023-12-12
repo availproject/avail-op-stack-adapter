@@ -62,6 +62,9 @@ type CLIConfig struct {
 	// RollupRpc is the HTTP provider URL for the L2 rollup node.
 	RollupRpc string
 
+	// AvailConfig provides the path of config file for setting up avail da
+	AvailConfig string
+
 	// MaxChannelDuration is the maximum duration (in #L1-blocks) to keep a
 	// channel open. This allows to more eagerly send batcher transactions
 	// during times of low L2 transaction volume. Note that the effective
@@ -126,6 +129,7 @@ func NewConfig(ctx *cli.Context) CLIConfig {
 		RollupRpc:       ctx.String(flags.RollupRpcFlag.Name),
 		SubSafetyMargin: ctx.Uint64(flags.SubSafetyMarginFlag.Name),
 		PollInterval:    ctx.Duration(flags.PollIntervalFlag.Name),
+		AvailConfig:     ctx.String(flags.AvailDAConfigFlag.Name),
 
 		/* Optional Flags */
 		MaxPendingTransactions: ctx.Uint64(flags.MaxPendingTransactionsFlag.Name),

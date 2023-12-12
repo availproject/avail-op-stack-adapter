@@ -48,7 +48,7 @@ type L2Chain interface {
 
 type AvailDA interface {
 	derive.AvailDAFetcher
-	SubmitTxDataAndGetRef(ctx context.Context, TxData []byte) ([]byte, error)
+	SubmitTxDataAndGetRef(TxData []byte) ([]byte, error)
 }
 
 type DerivationPipeline interface {
