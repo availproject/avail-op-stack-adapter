@@ -4,7 +4,7 @@
 
 Hello! This guide is meant to help you kick off your Avail-OP Stack journey by taking you through the process of spinning up your very own avail-optimism chain on the Ethereum Goerli testnet as settlement layer and Avail kate testnet as Data Avalibility layer.
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#know-before-you-go)**Know before you go
+# Know before you go
 
 Before we kick off, note that this is a relatively long tutorial! You should prepare to set aside an hour or two to get everything running. Here’s an itemized list of what we’re about to do:
 
@@ -20,7 +20,7 @@ Before we kick off, note that this is a relatively long tutorial! You should pre
 10. Send some test transactions
 11. Celebrate!
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#prerequisites)**Prerequisites
+# Prerequisites
 
 You’ll need the following software installed to follow this tutorial:
 
@@ -39,71 +39,69 @@ This tutorial was checked on:
 | --- | --- | --- |
 | Ubuntu | 20.04 LTS |  |
 | git, curl, jq, and make | OS default | sudo apt install -y git curl make jq |
-| Go | 1.20 | sudo apt updatewget https://go.dev/dl/go1.20.linux-amd64.tar.gztar xvzf go1.20.linux-amd64.tar.gzsudo cp go/bin/go /usr/bin/gosudo mv go /usr/libecho export GOROOT=/usr/lib/go >> ~/.bashrc |
-| Node | 16.19.0 | curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -sudo apt-get install -y nodejs npm |
+| Go | 1.20 | sudo apt updatewget <https://go.dev/dl/go1.20.linux-amd64.tar.gztar> xvzf go1.20.linux-amd64.tar.gzsudo cp go/bin/go /usr/bin/gosudo mv go /usr/libecho export GOROOT=/usr/lib/go >> ~/.bashrc |
+| Node | 16.19.0 | curl -fsSL <https://deb.nodesource.com/setup_16.x> | sudo -E bash -sudo apt-get install -y nodejs npm |
 | pnpm | 8.5.6 | sudo npm install -g pnpm |
 | Foundry | 0.2.0 | yarn install:foundry |
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#build-the-source-code)**Build the Source Code
+# Build the Source Code
 
-We’re going to be spinning up an EVM Rollup from the Avail-OP Stack source code. The OP Stack source code is split between two repositories, the **[Avail-OP-Stack Adapter](https://github.com/availproject/avail-op-stack-adapter) monorepo** and the **`[op-geth`](https://github.com/ethereum-optimism/op-geth)** repository.
+We’re going to be spinning up an EVM Rollup from the Avail-OP-Stack-Adapter source code. The Avail-Optimism is split between two repositories, the **[Avail-OP-Stack Adapter](https://github.com/availproject/avail-op-stack-adapter) monorepo** and the **[op-geth](https://github.com/ethereum-optimism/op-geth)** repository.
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#build-the-optimism-monorepo)**Build the Optimism Monorepo
+# Build the Optimism Monorepo
 
 1. Clone the [Avail-OP-Stack Adapter](https://github.com/availproject/avail-optimism).
-    
+
     ```bash
     cd ~
     git clone https://github.com/availproject/avail-op-stack-adapter.git
     ```
-    
+
 2. Enter the Avail-OP-Stack Monorepo.
-    
+
     ```bash
     cd avail-op-stack-adapter
     ```
-    
+
 3. Install required modules. This is a slow process, while it is running you can already start building `op-geth`, as shown below.
-    
+
     ```bash
     pnpm install
     ```
-    
+
 4. Build the various packages inside of the Optimism Monorepo.
-    
+
     ```bash
     make op-node op-batcher op-proposer
     pnpm build
     ```
-    
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#build-op-geth)**Build op-geth
+# Build op-geth
 
-1. Clone **`[op-geth`](https://github.com/ethereum-optimism/op-geth)** :
-    
+1. Clone **[op-geth](https://github.com/ethereum-optimism/op-geth)** :
+
     ```bash
     cd ~
     git clone https://github.com/ethereum-optimism/op-geth.git
     ```
-    
+
 2. Enter `op-geth`:
-    
+
     ```bash
     cd op-geth
     ```
-    
+
 3. Build `op-geth`:
-    
+
     ```bash
     make geth
     ```
-    
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#get-access-to-a-goerli-node)**Get access to a Goerli node
+# Get access to a Goerli node
 
-Since we’re deploying our OP Stack chain to Goerli, you’ll need to have access to a Goerli L1 node. You can either use a node provider like **[Alchemy](https://www.alchemy.com/)** (easier) or **[run your own Goerli node](https://notes.ethereum.org/@launchpad/goerli)** (harder).
+Since we’re deploying our Avail-Optimism chain to Goerli, you’ll need to have access to a Goerli L1 node. You can either use a node provider like **[Alchemy](https://www.alchemy.com/)** (easier) or **[run your own Goerli node](https://notes.ethereum.org/@launchpad/goerli)** (harder).
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#generate-some-keys)**Generate some keys
+# Generate some keys
 
 You’ll need four accounts and their private keys when setting up the chain:
 
@@ -115,19 +113,19 @@ You’ll need four accounts and their private keys when setting up the chain:
 You can generate all of these keys with the `rekey` tool in the `contracts-bedrock` package.
 
 1. Enter the Avail-Optimism Monorepo:
-    
+
     ```bash
     cd avail-op-stack-adapter
     ```
-    
+
 2. Move into the `contracts-bedrock` package:
-    
+
     ```bash
     cd packages/contracts-bedrock
     ```
-    
+
 3. Use `cast wallet` to generate new accounts
-    
+
     ```bash
     echo "Admin:"
     cast wallet new
@@ -138,7 +136,6 @@ You can generate all of these keys with the `rekey` tool in the `contracts-be
     echo "Sequencer:"
     cast wallet new
     ```
-    
 
 You should get an output like the following:
 
@@ -173,55 +170,55 @@ Recommended funding amounts are as follows:
 
 The `cast wallet new` tool is *not* designed for production deployments. If you are deploying an Avail-Optimism Stack based chain into production, you should likely be using a combination of hardware security modules and hardware wallets.
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#configure-your-network)**Configure your network
+# Configure your network
 
-Once you’ve built both repositories, you’ll need head back to the Optimism Monorepo to set up the configuration for your chain. Currently, chain configuration lives inside of the **`[contracts-bedrock](https://github.com/availproject/avail-optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock)` [](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock)**package.
+Once you’ve built both repositories, you’ll need head back to the Avail-Op-Stack-Adapter Monorepo to set up the configuration for your chain. Currently, chain configuration lives inside of the **[contracts-bedrock](https://github.com/availproject/avail-optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock)** package.
 
 1. Enter the Avail-OP-Stack Monorepo:
-    
+
     ```bash
     cd ~/avail-op-stack-adapter
     ```
-    
+
 2. Move into the `contracts-bedrock` package:
-    
+
     ```bash
     cd packages/contracts-bedrock
     ```
-    
+
 3. Inside of `contracts-bedrock`, copy the environment file
-    
+
     ```
     cp .envrc.example .envrc
     ```
-    
+
 4. Fill out the environment variables inside of that file:
     - `ETH_RPC_URL` — URL for your L1 node.
     - `PRIVATE_KEY` — Private key of the `Admin` account.
     - `DEPLOYMENT_CONTEXT` - Name of the network, should be "avail-optimism"
 5. Pull the environment variables into context using `direnv`
-    
+
     ```bash
     direnv allow .
     ```
-    
+
     If you need to install `direnv`, **[make sure you also modify the shell configuration](https://direnv.net/docs/hook.html)**.
-    
+
 6. Before we can create our configuration file, we’ll need to pick an L1 block to serve as the starting point for our Rollup. It’s best to use a finalized L1 block as our starting block. You can use the `cast` command provided by Foundry to grab all of the necessary information:
-    
+
     ```bash
     cast block finalized --rpc-url $ETH_RPC_URL | grep -E "(timestamp|hash|number)"
     ```
-    
+
     You’ll get back something that looks like the following:
-    
+
     ```
     hash                 0x784d8e7f0e90969e375c7d12dac7a3df6879450d41b4cb04d4f8f209ff0c4cd9
     number               8482289
     timestamp            1676253324
     ```
-    
-7. Create a copy of file `deploy-config/getting-started.json` at `deploy-config` named `avail-optimism.json` 
+
+7. Create a copy of file `deploy-config/getting-started.json` at `deploy-config` named `avail-optimism.json`
 8. Fill out the remainder of the pre-populated config file **`deploy-config/avail-optimism.json`**. Use the default values in the config file and make following modifications:
     - Replace `"ADMIN"` with the address of the Admin account you generated earlier.
     - Replace `"PROPOSER"` with the address of the Proposer account you generated earlier.
@@ -231,13 +228,13 @@ Once you’ve built both repositories, you’ll need head back to the Optimism M
     - Replace `TIMESTAMP` with the timestamp you got from the `cast` command. Note that although all the other fields are strings, this field is a number! Don’t include the quotation marks.
 9. Check the value of `enableDA` config variable should be `true` to use Avail chain as DA or you can set it to `false` for using ethereum as DA
 10. Move into `op-avail` module
-    
+
     ```bash
     cd ~/avail-op-stack-adapter/op-avail
     ```
-    
+
 11. Add a `config.json` file to this directory with these variables and change the `seed` and `app_id` according to your avail account
-    
+
     ```
     {
       "seed": "test test test test test test test test test test test avail",
@@ -245,41 +242,39 @@ Once you’ve built both repositories, you’ll need head back to the Optimism M
       "app_id": 1
     }
     ```
-    
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#deploy-the-l1-contracts)**Deploy the L1 contracts
+# Deploy the L1 contracts
 
 Once you’ve configured your network, it’s time to deploy the L1 smart contracts necessary for the functionality of the chain.
 
 1. Create a `avail-optimism` deployment directory.
-    
+
     ```bash
     mkdir deployments/avail-optimism
     ```
-    
+
 2. Once you’re ready, deploy the L1 smart contracts.
-    
+
     ```bash
     forge script scripts/Deploy.s.sol:Deploy --private-key $PRIVATE_KEY --broadcast --rpc-url $ETH_RPC_URL
     forge script scripts/Deploy.s.sol:Deploy --sig 'sync()' --private-key $PRIVATE_KEY --broadcast --rpc-url $ETH_RPC_URL
-    
+
     ```
-    
 
 Contract deployment can take up to 15 minutes. Please wait for all smart contracts to be fully deployed before continuing to the next step.
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#generate-the-l2-config-files)**Generate the L2 config files
+# Generate the L2 config files
 
 We’ve set up the L1 side of things, but now we need to set up the L2 side of things. We do this by generating three important files, a `genesis.json` file, a `rollup.json` configuration file, and a `jwt.txt` **[JSON Web Token](https://jwt.io/introduction)** that allows the `op-node` and `op-geth` to communicate securely.
 
 1. Head over to the `op-node` package.
-    
+
     ```bash
     cd ~/avail-op-stack-adapter/op-node
     ```
-    
+
 2. Run the following command, and make sure to replace `<RPC>` with your L1 RPC URL:
-    
+
     ```bash
     go run cmd/main.go genesis l2 \
         --deploy-config ../packages/contracts-bedrock/deploy-config/avail-optimism.json \
@@ -288,49 +283,47 @@ We’ve set up the L1 side of things, but now we need to set up the L2 side of t
         --outfile.rollup rollup.json \
         --l1-rpc=$L1_RPC
     ```
-    
+
     You should then see the `genesis.json` and `rollup.json` files inside the `op-node` package.
-    
+
 3. Next, generate the `jwt.txt` file with the following command:
-    
+
     ```bash
     openssl rand -hex 32 > jwt.txt
     ```
-    
+
 4. Finally, we’ll need to copy the `genesis.json` file and `jwt.txt` file into `op-geth` so we can use it to initialize and run `op-geth` in just a minute:
-    
+
     ```bash
     cp genesis.json ~/op-geth
     cp jwt.txt ~/op-geth
     ```
-    
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#initialize-op-geth)**Initialize op-geth
+# Initialize op-geth
 
 We’re almost ready to run our chain! Now we just need to run a few commands to initialize `op-geth`. We’re going to be running a Sequencer node, so we’ll need to import the `Sequencer` private key that we generated earlier. This private key is what our Sequencer will use to sign new blocks.
 
 1. Head over to the `op-geth` repository:
-    
+
     ```bash
     cd ~/op-geth
     ```
-    
+
 2. Create a data directory folder:
-    
+
     ```bash
     mkdir datadir
     ```
-    
+
 3. Next we need to initialize `op-geth` with the genesis file we generated and copied earlier:
-    
+
     ```bash
     build/bin/geth init --datadir=datadir genesis.json
     ```
-    
 
 Everything is now initialized and ready to go!
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#run-the-node-software)**Run the node software
+# Run the node software
 
 There are four components that need to run for a rollup. The first two, `op-geth` and `op-node`, have to run on every node. The other two, `op-batcher` and `op-proposer`, run only in one place, the sequencer that accepts transactions.
 
@@ -345,7 +338,7 @@ Set these environment variables for the configuration
 | RPC_KIND | The type of L1 server to which you connect, which can optimize requests. Available options are alchemy, quicknode, parity, nethermind, debug_geth, erigon, basic, and any |
 | L2OO_ADDR | The address of the L2OutputOracleProxy, available at ~/optimism/packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json |
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#op-geth)**`op-geth`
+# `op-geth`
 
 Run `op-geth` with the following commands.
 
@@ -358,7 +351,7 @@ cd ~/op-geth
         --http.corsdomain="*" \
         --http.vhosts="*" \
         --http.addr=0.0.0.0 \
-				--http.port=9545 \
+        --http.port=9545 \
         --http.api=web3,debug,eth,txpool,net,engine \
         --ws \
         --ws.addr=0.0.0.0 \
@@ -386,38 +379,37 @@ Archive mode takes more disk storage than full mode. However, using it is import
 - The `op-proposer` requires access to the full state. If at some point `op-proposer` needs to look beyond 256 blocks in the past (8.5 minutes in the default configuration), for example because it was down for that long, we need archive mode.
 - The **explorer** requires archive mode.
 
-### **[#](https://stack.optimism.io/docs/build/getting-started/#reinitializing-op-geth)**Reinitializing op-geth
+### Reinitializing op-geth
 
 There are several situations are indicate database corruption and require you to reset the `op-geth` component:
 
 - When `op-node` errors out when first started and exits.
 - When `op-node` emits this error:
-    
+
     ```
     stage 0 failed resetting: temp: failed to find the L2 Heads to start from: failed to fetch L2 block by hash 0x0000000000000000000000000000000000000000000000000000000000000000
     ```
-    
 
 This is the reinitialization procedure:
 
 1. Stop the `op-geth` process.
 2. Delete the geth data.
-    
+
     ```bash
     cd ~/op-geth
     rm -rf datadir/geth
     ```
-    
+
 3. Rerun init.
-    
+
     ```bash
     build/bin/geth init --datadir=datadir genesis.json
     ```
-    
+
 4. Start `op-geth`
 5. Start `op-node`
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#op-node)**`op-node`
+# `op-node`
 
 Once we’ve got `op-geth` running we’ll need to run `op-node`. Like Ethereum, the OP Stack has a consensus client (the `op-node`) and an execution client (`op-geth`). The consensus client drives the execution client over the Engine API.
 
@@ -425,19 +417,19 @@ Once we’ve got `op-geth` running we’ll need to run `op-node`. Like Ethere
 cd ~/optimism/op-node
 
 ./bin/op-node \
-	--l2=http://localhost:9551 \
-	--l2.jwt-secret=./jwt.txt \
-	--sequencer.enabled \
-	--sequencer.l1-confs=3 \
-	--verifier.l1-confs=3 \
-	--rollup.config=./rollup.json \
-	--rpc.addr=0.0.0.0 \
-	--rpc.port=9547 \
-	--p2p.disable \
-	--rpc.enable-admin \
-	--p2p.sequencer.key=$SEQ_KEY \
-	--l1=$L1_RPC \
-	--l1.rpckind=$RPC_KIND
+ --l2=http://localhost:9551 \
+ --l2.jwt-secret=./jwt.txt \
+ --sequencer.enabled \
+ --sequencer.l1-confs=3 \
+ --verifier.l1-confs=3 \
+ --rollup.config=./rollup.json \
+ --rpc.addr=0.0.0.0 \
+ --rpc.port=9547 \
+ --p2p.disable \
+ --rpc.enable-admin \
+ --p2p.sequencer.key=$SEQ_KEY \
+ --l1=$L1_RPC \
+ --l1.rpckind=$RPC_KIND
 ```
 
 Once you run this command, you should start seeing the `op-node` begin to process all of the L1 information after the starting block number that you picked earlier. Once the `op-node` has enough information, it’ll begin sending Engine API payloads to `op-geth`. At that point, you’ll start to see blocks being created inside of `op-geth`. We’re live!
@@ -449,13 +441,13 @@ If you use a chain ID that is also used by others, for example the default (4206
 To avoid this , we start with peer to peer synchronization disabled (`--p2p.disable`). Once you have multiple nodes, it makes sense to use these command line parameters to synchronize between them without getting confused by other blockchains.
 
 ```
-	--p2p.static=<nodes> \
-	--p2p.listen.ip=0.0.0.0 \
-	--p2p.listen.tcp=9003 \
-	--p2p.listen.udp=9003 \
+ --p2p.static=<nodes> \
+ --p2p.listen.ip=0.0.0.0 \
+ --p2p.listen.tcp=9003 \
+ --p2p.listen.udp=9003 \
 ```
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#op-batcher)**`op-batcher`
+# `op-batcher`
 
 The `op-batcher` takes transactions from the Sequencer and publishes those transactions to L1. Once transactions are on L1, they’re officially part of the Rollup. Without the `op-batcher`, transactions sent to the Sequencer would never make it to L1 and wouldn’t become part of the canonical chain. The `op-batcher` is critical!
 
@@ -484,7 +476,7 @@ cd ~/optimism/op-batcher
 
 The `--max-channel-duration=n` setting tells the batcher to write all the data to L1 every `n` L1 blocks. When it is low, transactions are written to L1 frequently, withdrawals are quick, and other nodes can synchronize from L1 fast. When it is high, transactions are written to L1 less frequently, and the batcher spends less ETH.
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#op-proposer)**`op-proposer`
+# `op-proposer`
 
 Now start `op-proposer`, which proposes new state roots.
 
@@ -500,32 +492,26 @@ cd ~/optimism/op-proposer
     --l1-eth-rpc=$L1_RPC
 ```
 
-# **[#](https://stack.optimism.io/docs/build/getting-started/#get-some-eth-on-your-rollup)**Get some ETH on your Rollup
+# Get some ETH on your Rollup
 
 Once you’ve connected your wallet, you’ll probably notice that you don’t have any ETH on your Rollup. You’ll need some ETH to pay for gas on your Rollup. The easiest way to deposit Goerli ETH into your chain is to send funds directly to the `L1StandardBridge` contract. You can find the address of the `L1StandardBridge` contract for your chain by looking inside the `deployments` folder in the `contracts-bedrock` package.
 
 1. First, head over to the `contracts-bedrock` package:
-    
+
     ```bash
     cd ~/optimism/packages/contracts-bedrock
-    
     ```
-    
-    1
-    
+
 2. Grab the address of the proxy to the L1 standard bridge contract:
-    
+
     ```bash
     cat deployments/avail-optimism/L1StandardBridgeProxy.json | jq -r .address
-    
     ```
-    
-    1
-    
+
 3. Grab the L1 bridge proxy contract address and, using the wallet that you want to have ETH on your Rollup, send that address a small amount of ETH on Goerli (0.1 or less is fine). It may take up to 5 minutes for that ETH to appear in your wallet on L2.
 
-# Hurray!
+# Hurray
 
-**Congratulations, you made it! You now have a complete Avail-OP-Stack based EVM Rollup.**
+**Congratulations, you made it! You now have a complete Avail-OP-Stack-Adapter based EVM Rollup.**
 
 You can use this rollup the same way you’d use any other test blockchain.

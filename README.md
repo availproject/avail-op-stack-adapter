@@ -2,11 +2,21 @@
 <div align="center">
   <br />
   <br />
-  <a href="https://optimism.io"><img alt="Optimism" src="https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/OPTIMISM-R.svg" width=600></a>
+  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="./op-avail/avail-optimism-logo.gif" width=600></a>
   <br />
-  <h3><a href="https://optimism.io">Optimism</a> is Ethereum, scaled.</h3>
+  <h3><a href="https://www.availproject.org/">Avail</a>: Data availability focused blockchain <a href="https://github.com/availproject/avail-op-stack-adapter">X</a> Low-cost and lightning-fast Ethereum L2 blockchain: <a href="https://optimism.io">Optimism</a></h3>
   <br />
 </div>
+
+# Avail-OP-Stack-Adapter
+
+### Avail-OP-Stack Adapter integrates the Avail Data Availability layer in Optimism’s OP Stack to create a more optimised and efficient Optimistic Rollup architecture. It is designed to minimise the cost of posting L2 transactions over the DA layer with a better data availability guarantee
+
+## What is Avail?
+
+[Avail](https://www.availproject.org/) is a data availability focused blockchain. Its blocks are designed to provide secure, decentralized and low-cost blockspace for the data availability needs of other blockchains. It is built to meet the needs of next-generation, trust-minimized applications and sovereign rollups. Avail's strengths lie in its innovative security approach, which allows light clients to easily verify data availability through sampling over a peer-to-peer network. Avail’s modular approach simplifies blockchain integration for developers, as they no longer need to worry about validator sets or tokenomics. With Avail's unparalleled data availability interface and powerful security capabilities, developers can create zero-knowledge or fraud-proof-based blockchain applications with greater efficiency and ease.
+
+At its core, Avail prioritizes ordering and publishing transactions while enabling users to verify the availability of block data without needing to download entire blocks. Avail's data-agnostic nature is one of its defining features. It supports various execution environments, including EVM, WASM, and custom new runtimes, offering a versatile foundation for diverse blockchain applications.
 
 ## What is Optimism?
 
@@ -14,50 +24,91 @@
 
 In this repository, you'll find numerous core components of the OP Stack, the decentralized software stack maintained by the Optimism Collective that powers Optimism and forms the backbone of blockchains like [OP Mainnet](https://explorer.optimism.io/) and [Base](https://base.org). Designed to be "aggressively open source," the OP Stack encourages you to explore, modify, extend, and test the code as needed. Although not all elements of the OP Stack are contained here, many of its essential components can be found within this repository. By collaborating on free, open software and shared standards, the Optimism Collective aims to prevent siloed software development and rapidly accelerate the development of the Ethereum ecosystem. Come contribute, build the future, and redefine power, together.
 
+## Integration of Avail DA layer in OP-Stack
+
+OP Stack chain is derived from the Data Availability Layer, the Data Availability module(s) used have a significant impact on the security model of a system. For example, if a certain piece of data can no longer be retrieved from the Data Availability Layer, it may not be possible to sync the chain.
+
+In ORUs, **Sequencer** has the responsibility to submit L2 transactions to a **data availability provider**. Ethereum DA is currently the used Data Availability module for the OP Stack.
+
+In `Avail-OP-Stack-Adapter`, the Data Availability layer is switched from Ethereum to Avail in OP Stack modular blockchain architecture to create the optimistic rollup.
+
+1. **Sequencer** posts L2 transaction data on Avail DA and submits the data commitment to Ethereum as `callData`.
+2. **Verifier and Rollup nodes** can derive the chain using the data commitment from `callData` to read the L2 transaction data from Avail.
+
+## Working of Avail-OP-Stack-Adapter
+
+There are few changes being made in the workflow compared to **`op-stack`** with Ethereum as Data Availability Layer
+
+1. **`op-avail`** is the module added to integrate the Avail DA with **`op-stack`**.
+2. Here, **`op-batcher`** submits the batch of transactions on Avail DA using the **`op-avail`** and gets the data commitment in the return, which is again submitted over Ethereum as `callData` on BatchInbox address.
+3. To derive the chain **`op-node`**, first query the data commitment from Ethereum `callData` and then fetch the L2 transaction data through **`op-avail`**.
+
+Here **`op-node`**, **`op-geth`**, **`op-batcher`** and **`op-proposer`** are the software components of op-stack to learn more about it, follow [**op-stack**](https://github.com/ethereum-optimism/optimism/tree/develop)
+
+<div align="center">
+  <br />
+  <br />
+  <a href="https://github.com/availproject/avail-op-stack-adapter"><img alt="Avail X Optimism" src="./op-avail/avail-optimism-model.png" width=1000></a>
+  <br />
+</div>
+
+## Benefits
+
+ORUs faced with growth challenges due to constrained blockspace and prohibitive costs, have now come to recognize that a scalable [data availability](https://availproject.github.io/?ref=blog.availproject.org) layer is crucial for effectively scaling blockchains. They have come to realize the need for a cost-effective base layer with expandable block space
+
+Avail is a highly tuned data availability base layer which can provide raw blockspace for next-generation, trust minimized applications and blockchains. it ensures the modular blockchain ecosystem can access secure, affordable and highly available block space for transaction data unlocking significant scaling potential for the industry.
+
+### Cost
+
+When inspecting L1 transactions for Ethereum Rollups, we can see the major bottleneck which represents up to 90% of their costs is transaction data. In fact, this is the largest cost item for Ethereum Rollups as [most of their revenues](https://twitter.com/0xKofi/status/1666844191194853383?ref=blog.availproject.org) go towards paying an L1 to publish transaction data.
+
+Ethereum is the most expensive solution in relation to congestion and demand. Even with EIP-4844 Ethereum will still be costly as it provides only a one-time increase in blockspace. DACs are the cheapest, but this comes at the cost of adopting a more centralized approach.
+
+Avail is a Data Availablity Sampling based DA provider with no congestion, Using Avail as DA layer will reduce the cost of posting L2 transactional data over L1 layer.
+
+### High Data Availability
+
+pre EIP 4844 ethereum has no support of DAS and fraud proof and with low calldata space, where as in Avail
+
+Avail’s light client network ensures high availability of data through Data Availability Sampling. with validity proof mechanism and high space compared to ethereum’s calldata
+
 ## Documentation
 
-- If you want to build on top of OP Mainnet, refer to the [Optimism Community Hub](https://community.optimism.io)
-- If you want to build your own OP Stack based blockchain, refer to the [OP Stack docs](https://stack.optimism.io)
-- If you want to contribute to the OP Stack, check out the [Protocol Specs](./specs)
+- If you want to build on top of Avail, refer to the [Avail developers](https://www.availproject.org/developer)
+- If you want to build your own avail-optimism blockchain, refer to the [Avail Optimism(Optimium)](https://docs.availproject.org/category/optimium/)
+- If you want to learn more about OP-Stack and Optimsim, check out the [OP Stack](https://stack.optimism.io/) and [Optimism](https://www.optimism.io/)
 
 ## Community
+
+### Optimism
 
 General discussion happens most frequently on the [Optimism discord](https://discord.gg/optimism).
 Governance discussion can also be found on the [Optimism Governance Forum](https://gov.optimism.io/).
 
+### Avail
+
+General discussion happens most frequently on the [Avail discord](https://discord.gg/y6fHnxZQX8).
+Other discussion can also be found on the [Avail Forum](https://forum.availproject.org/).
+
 ## Contributing
 
 Read through [CONTRIBUTING.md](./CONTRIBUTING.md) for a general overview of the contributing process for this repository.
-Use the [Developer Quick Start](./CONTRIBUTING.md#development-quick-start) to get your development environment set up to start working on the Optimism Monorepo.
-Then check out the list of [Good First Issues](https://github.com/ethereum-optimism/optimism/contribute) to find something fun to work on!
-
-## Security Policy and Vulnerability Reporting
-
-Please refer to the canonical [Security Policy](https://github.com/ethereum-optimism/.github/blob/master/SECURITY.md) document for detailed information about how to report vulnerabilities in this codebase.
-Bounty hunters are encouraged to check out [the Optimism Immunefi bug bounty program](https://immunefi.com/bounty/optimism/).
-The Optimism Immunefi program offers up to $2,000,042 for in-scope critical vulnerabilities.
-
-## The Bedrock Upgrade
-
-OP Mainnet is currently preparing for [its next major upgrade, Bedrock](https://dev.optimism.io/introducing-optimism-bedrock/).
-You can find detailed specifications for the Bedrock upgrade within the [specs folder](./specs) in this repository.
-
-Please note that a significant number of packages and folders within this repository are part of the Bedrock upgrade and are NOT currently running in production.
-Refer to the Directory Structure section below to understand which packages are currently running in production and which are intended for use as part of the Bedrock upgrade.
+Use the [Developer Quick Start](./CONTRIBUTING.md#development-quick-start) to get your development environment set up to start working on the avail-op-stack-adapter Monorepo.
+Then check out the list of [Good First Issues](https://github.com/availproject/avail-op-stack-adapter/contribute) to find something fun to work on!
 
 ## Directory Structure
 
 <pre>
-~~ Production ~~
 ├── <a href="./packages">packages</a>
 │   ├── <a href="./packages/common-ts">common-ts</a>: Common tools for building apps in TypeScript
 │   ├── <a href="./packages/contracts-bedrock">contracts-bedrock</a>: Bedrock smart contracts.
-│   ├── <a href="./packages/contracts-periphery">contracts-periphery</a>: Peripheral contracts for Optimism
-│   ├── <a href="./packages/core-utils">core-utils</a>: Low-level utilities that make building Optimism easier
+│   ├── <a href="./packages/contracts-periphery">contracts-periphery</a>: Peripheral contracts for avail-op-stack-adapter
+│   ├── <a href="./packages/core-utils">core-utils</a>: Low-level utilities that make building avail-op-stack-adapter easier
 │   ├── <a href="./packages/chain-mon">chain-mon</a>: Chain monitoring services
 │   ├── <a href="./packages/fault-detector">fault-detector</a>: Service for detecting Sequencer faults
 │   ├── <a href="./packages/replica-healthcheck">replica-healthcheck</a>: Service for monitoring the health of a replica node
-│   └── <a href="./packages/sdk">sdk</a>: provides a set of tools for interacting with Optimism
+│   └── <a href="./packages/sdk">sdk</a>: provides a set of tools for interacting with avail-op-stack-adapter
+├── <a href="./op-avail">op-avail</a>: Avail module to interact with Avail DA
 ├── <a href="./op-bindings">op-bindings</a>: Go bindings for Bedrock smart contracts.
 ├── <a href="./op-batcher">op-batcher</a>: L2-Batch Submitter, submits bundles of batches to L1
 ├── <a href="./op-bootnode">op-bootnode</a>: Standalone op-node discovery bootnode
@@ -75,20 +126,6 @@ Refer to the Directory Structure section below to understand which packages are 
 ├── <a href="./ops-bedrock">ops-bedrock</a>: Bedrock devnet work
 ├── <a href="./proxyd">proxyd</a>: Configurable RPC request router and proxy
 └── <a href="./specs">specs</a>: Specs of the rollup starting at the Bedrock upgrade
-
-~~ Pre-BEDROCK ~~
-├── <a href="./packages">packages</a>
-│   ├── <a href="./packages/common-ts">common-ts</a>: Common tools for building apps in TypeScript
-│   ├── <a href="./packages/contracts-periphery">contracts-periphery</a>: Peripheral contracts for Optimism
-│   ├── <a href="./packages/core-utils">core-utils</a>: Low-level utilities that make building Optimism easier
-│   ├── <a href="./packages/chain-mon">chain-mon</a>: Chain monitoring services
-│   ├── <a href="./packages/fault-detector">fault-detector</a>: Service for detecting Sequencer faults
-│   ├── <a href="./packages/replica-healthcheck">replica-healthcheck</a>: Service for monitoring the health of a replica node
-│   └── <a href="./packages/sdk">sdk</a>: provides a set of tools for interacting with Optimism
-├── <a href="./indexer">indexer</a>: indexes and syncs transactions
-├── <a href="./op-exporter">op-exporter</a>: A prometheus exporter to collect/serve metrics from an Optimism node
-├── <a href="./proxyd">proxyd</a>: Configurable RPC request router and proxy
-└── <a href="./technical-documents">technical-documents</a>: audits and post-mortem documents
 </pre>
 
 ## Branching Model
@@ -97,9 +134,8 @@ Refer to the Directory Structure section below to understand which packages are 
 
 | Branch          | Status                                                                           |
 | --------------- | -------------------------------------------------------------------------------- |
-| [master](https://github.com/ethereum-optimism/optimism/tree/master/)                   | Accepts PRs from `develop` when intending to deploy to production.                  |
-| [develop](https://github.com/ethereum-optimism/optimism/tree/develop/)                 | Accepts PRs that are compatible with `master` OR from `release/X.X.X` branches.                    |
-| release/X.X.X                                                                          | Accepts PRs for all changes, particularly those not backwards compatible with `develop` and `master`. |
+| [avail-master](hhttps://github.com/availproject/avail-op-stack-adapter/tree/avail-master/)                   | Accepts PRs from `avail-develop` when intending to deploy to production.                  |
+| [avail-develop](https://github.com/availproject/avail-op-stack-adapter/tree/avail-develop/)                 | Accepts PRs that are successfully running without fails.                    |
 
 ### Overview
 
@@ -108,55 +144,16 @@ Please read the linked post if you're planning to make frequent PRs into this re
 
 ### Production branch
 
-The production branch is `master`.
-The `master` branch contains the code for latest "stable" releases.
-Updates from `master` **always** come from the `develop` branch.
+The production branch is `avail-master`.
+The `avail-master` branch contains the code for latest "stable" releases.
+Updates from `avail-master` **always** come from the `avail-develop` branch.
 
 ### Development branch
 
-The primary development branch is [`develop`](https://github.com/ethereum-optimism/optimism/tree/develop/).
-`develop` contains the most up-to-date software that remains backwards compatible with the latest experimental [network deployments](https://community.optimism.io/docs/useful-tools/networks/).
-If you're making a backwards compatible change, please direct your pull request towards `develop`.
-
-**Changes to contracts within `packages/contracts-bedrock/contracts` are usually NOT considered backwards compatible and SHOULD be made against a release candidate branch**.
-Some exceptions to this rule exist for cases in which we absolutely must deploy some new contract after a release candidate branch has already been fully deployed.
-If you're changing or adding a contract and you're unsure about which branch to make a PR into, default to using the latest release candidate branch.
-See below for info about release candidate branches.
-
-### Release candidate branches
-
-Branches marked `release/X.X.X` are **release candidate branches**.
-Changes that are not backwards compatible and all changes to contracts within `packages/contracts-bedrock/contracts` MUST be directed towards a release candidate branch.
-Release candidates are merged into `develop` and then into `master` once they've been fully deployed.
-We may sometimes have more than one active `release/X.X.X` branch if we're in the middle of a deployment.
-See table in the **Active Branches** section above to find the right branch to target.
-
-## Releases
-
-### Changesets
-
-We use [changesets](https://github.com/changesets/changesets) to mark packages for new releases.
-When merging commits to the `develop` branch you MUST include a changeset file if your change would require that a new version of a package be released.
-
-To add a changeset, run the command `pnpm changeset` in the root of this monorepo.
-You will be presented with a small prompt to select the packages to be released, the scope of the release (major, minor, or patch), and the reason for the release.
-Comments within changeset files will be automatically included in the changelog of the package.
-
-### Triggering Releases
-
-Releases can be triggered using the following process:
-
-1. Create a PR that merges the `develop` branch into the `master` branch.
-2. Wait for the auto-generated `Version Packages` PR to be opened (may take several minutes).
-3. Change the base branch of the auto-generated `Version Packages` PR from `master` to `develop` and merge into `develop`.
-4. Create a second PR to merge the `develop` branch into the `master` branch.
-
-After merging the second PR into the `master` branch, packages will be automatically released to their respective locations according to the set of changeset files in the `develop` branch at the start of the process.
-Please carry this process out exactly as listed to avoid `develop` and `master` falling out of sync.
-
-**NOTE**: PRs containing changeset files merged into `develop` during the release process can cause issues with changesets that can require manual intervention to fix.
-It's strongly recommended to avoid merging PRs into develop during an active release.
+The primary development branch is [`avail-develop`](https://github.com/availproject/avail-op-stack-adapter/tree/avail-develop/).
+`avail-develop` contains the most up-to-date software that remains backwards compatible with the latest experimental.
+If you're making a backwards compatible change, please direct your pull request towards `avail-develop`.
 
 ## License
 
-All other files within this repository are licensed under the [MIT License](https://github.com/ethereum-optimism/optimism/blob/master/LICENSE) unless stated otherwise.
+All other files within this repository are licensed under the [MIT License](https://github.com/availproject/avail-op-stack-adapter/blob/avail-master/LICENSE) unless stated otherwise.
