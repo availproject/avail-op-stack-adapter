@@ -75,7 +75,7 @@ nuke: clean devnet-clean
 
 #Avail-OP testnet
 setup-avail-op-testnet:
-	bash ./avail-op-testnet/deploy.sh
+	bash ./avail-op-testnet/generate-wallets.sh
 .PHONY: setup-avail-op-testnet
 
 avail-op-testnet-up:

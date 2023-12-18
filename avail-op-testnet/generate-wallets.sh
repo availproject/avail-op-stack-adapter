@@ -1,9 +1,16 @@
-#!/usr/bin/env bash
+# Check if directory already exists,
+# if it doesnt, create one.
+if [ ! -d "./.testnet" ]; then
+        mkdir ".testnet"
+else
+        rm -rf ".testnet"
+        mkdir ".testnet"
+fi
 
-# This script is used to generate the four wallets that are used in the Getting
-# Started quickstart guide on the docs site. Simplifies things for users
-# slightly while also avoiding the need for users to manually copy/paste a
-# bunch of stuff over to the environment file.
+
+
+#!/usr/bin/env bash
+# This script is used to generate the four wallets required of avail-optimism chain
 
 # Generate wallets
 wallet1=$(cast wallet new)
@@ -24,7 +31,7 @@ AVL_OP_PROPOSER_PRIVATE_KEY=$(echo "$wallet3" | awk '/Private key/ { print $3 }'
 AVL_OP_SEQUENCER_PRIVATE_KEY=$(echo "$wallet4" | awk '/Private key/ { print $3 }')
 
 # Generate the config file
-wallets=$(cat << EOL
+eth_wallets=$(cat << EOL
 {
 
   "Admin" : {
@@ -47,36 +54,54 @@ wallets=$(cat << EOL
 EOL
 )
 
-# Check if directory already exists,
-# if it doesnt, create one.
-if [ ! -d "./.testnet" ]; then
-        mkdir ".testnet"
-else
-        rm -rf ".testnet"
-        mkdir ".testnet"
-fi
 
 # Write the config file
-echo "$wallets" > ./.testnet/avail-op-testnet-wallets.json
-
-
-
-
+echo "$eth_wallets" > ./.testnet/avail-op-testnet-wallets.json
+# Print message
+echo ""
+echo "Ethereum Wallets"
+echo $eth_wallets
+echo ""
+echo "Fund these Ethereum accounts with at leat 0.1 ETH"
 
 
 
 
 
 #!/usr/bin/env bash
+# This script is used to generate the avail wallet required of avail-optimism chain
+wallet0=$(cast wallet new-mnemonic -a 0)
+AVL_OP_AVAIL_SEED_PHRASE=$(echo "$wallet0" | awk 'NR==3  { print $0}')
+#node avail-op-testnet/generate-avail-wallet.js
 
-# This script is used to generate the getting-started.json configuration file
-# used in the Getting Started quickstart guide on the docs site. Avoids the
-# need to have the getting-started.json committed to the repo since it's an
-# invalid JSON file when not filled in, which is annoying.
+# Generate the config file
+avl_wallet=$(cat << EOL
+{
+  "seed" : "$AVL_OP_AVAIL_SEED_PHRASE",
+  "api_url" : "wss://kate.avail.tools:443/ws",
+  "app_id": 1
+}
+EOL
+)
 
+# Write the config file
+echo "$avl_wallet" > ./.testnet/avail-config.json
+
+# Print message
+echo ""
+echo "Avail Config"
+echo $avl_wallet
+echo ""
+echo "Fund this Avail account with at leat 10 AVL Tokens and create an app_id for this account using the avail explorer"
+
+
+
+
+#!/usr/bin/env bash
+# This script is used to generate the avail-optimism.json configuration file
 
 # Get the finalized block timestamp and hash
-L1_RPC_URL="https://eth-goerli.g.alchemy.com/v2/zmvISxoaiFivtoDZHrkB_GEvzBwH5NLT"
+L1_RPC_URL=$L1_RPC
 block=$(cast block finalized --rpc-url $L1_RPC_URL)
 timestamp=$(echo "$block" | awk '/timestamp/ { print $2 }')
 blockhash=$(echo "$block" | awk '/hash/ { print $2 }')
@@ -89,7 +114,7 @@ config=$(cat << EOL
   "portalGuardian": "$AVL_OP_ADMIN_ADDRESS",
   "controller": "$AVL_OP_ADMIN_ADDRESS",
   "l1StartingBlockTag": "$blockhash",
-  "l1ChainID": 5,
+  "l1ChainID": $L1_CHAIN_ID,
   "l2ChainID": 42069,
   "l2BlockTime": 5,
   "maxSequencerDrift": 600,
@@ -132,3 +157,9 @@ EOL
 
 # Write the config file
 echo "$config" > ./packages/contracts-bedrock/deploy-config/avail-op-testnet.json
+
+
+# Print message
+echo ""
+echo ""
+echo "After completing the funding, you can use \"make avail-op-testnet-up\" to start the Avail-Optimism testnet"

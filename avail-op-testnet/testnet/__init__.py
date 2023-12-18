@@ -4,14 +4,10 @@ import os
 import subprocess
 import json
 import socket
-import calendar
-import datetime
 import time
 import shutil
 import http.client
 
-import testnet.log_setup
-from testnet.genesis import GENESIS_TMPL
 
 pjoin = os.path.join
 
@@ -61,10 +57,7 @@ def main():
       #generate_accounts_and_network_config(paths)
       #funding_avail_op_accounts(paths)
       testnet_deploy(paths)
-      #generate_accounts(paths)
-    # else:
-    #   log.info('Devnet with smart contracts pre-deployed')
-    #   devnet_prestate(paths)
+
 
 
 def generate_accounts_and_network_config(paths):
@@ -81,39 +74,14 @@ def funding_avail_op_accounts(paths):
 
 # Bring up the devnet where the contracts are deployed to L1
 def testnet_deploy(paths):
-    if os.path.exists(paths.genesis_l1_path):
-        log.info('L1 genesis already generated.')
-    else:
-        log.info('Generating L1 genesis.')
-        write_json(paths.genesis_l1_path, GENESIS_TMPL)
-
     log.info('Starting L1.')
-    # run_command(['docker-compose', 'up', '-d', 'l1'], cwd=paths.ops_optimium_dir, env={
-    #     'PWD': paths.ops_optimium_dir
-    # })
-
-    L1_NODE_URL = "https://eth-goerli.g.alchemy.com/v2/zmvISxoaiFivtoDZHrkB_GEvzBwH5NLT"
-    #wait_up(8545)
-    #wait_for_rpc_server(L1_NODE_URL)
-
-    # log.info('Generating network config.')
-    # testnet_cfg_orig = pjoin(paths.contracts_bedrock_dir, 'deploy-config', 'avail-op-testnet.json')
-    # testnet_cfg_backup = pjoin(paths.testnet_dir, 'avail-op-testnet.json.bak')
-    # shutil.copy(testnet_cfg_orig, testnet_cfg_backup)
-    # deploy_config = read_json(testnet_cfg_orig)
-
-    # deploy_config['l1GenesisBlockTimestamp'] = GENESIS_TMPL['timestamp']
-    # deploy_config['l1StartingBlockTag'] = 'earliest'
-
-    # write_json(testnet_cfg_orig, deploy_config)
-
+    L1_NODE_URL = os.environ["L1_RPC"]
 
     log.info('Fetching avail-op-chain accounts')
     testnet_wallets_orig = pjoin(paths.testnet_dir, 'avail-op-testnet-wallets.json')
     wallets = read_json(testnet_wallets_orig)
 
     fqn = 'scripts/Deploy.s.sol:Deploy'
-    # private_key = '0x3fb285cf9b7f7dc84f81908cd2367b2b9f45e3cc4204c58f0b6cb940210a688f'
     private_key = wallets['Admin']['Private key']
 
     if os.path.exists(paths.addresses_json_path):
@@ -177,22 +145,31 @@ def testnet_deploy(paths):
     if os.path.exists(testnet_cfg_backup):
         shutil.move(testnet_cfg_backup, testnet_cfg_orig)
 
-    log.info('Bringing up op-geth(L2 execution enviornment).')
+    log.info('Bringing up op-geth(L2 execution enviornment)')
     run_command(['docker-compose', 'up', '-d', 'op-geth'], cwd=paths.ops_optimium_dir, env={
         'PWD': paths.ops_optimium_dir
     })
     wait_up(9545)
     wait_for_rpc_server('127.0.0.1:9545')
 
-    log.info('Bringing up everything else.')
-    run_command(['docker-compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher'], cwd=paths.ops_optimium_dir, env={
+    log.info('Bringing up op-node(L2 consensus client)')
+    run_command(['docker-compose', 'up', '-d', 'op-node'], cwd=paths.ops_optimium_dir, env={
         'PWD': paths.ops_optimium_dir,
         'L1_RPC_URL': L1_NODE_URL,
         'SEQ_PRIVATE_KEY': wallets['Sequencer']['Private key'].split('x')[1],
+    })
+    log.info("Its working")
+    wait_up(7545)
+    wait_for_node_server('127.0.0.1:7545')
+
+
+    log.info('Bringing up everything else.')
+    run_command(['docker-compose', 'up', '-d', 'op-proposer', 'op-batcher'], cwd=paths.ops_optimium_dir, env={
+        'PWD': paths.ops_optimium_dir,
+        'L1_RPC_URL': L1_NODE_URL,
         'BATCH_PRIVATE_KEY': wallets['Batcher']['Private key'].split('x')[1],
         'PROP_PRIVATE_KEY': wallets['Proposer']['Private key'].split('x')[1],
         'L2OO_ADDRESS': addresses['L2OutputOracleProxy'],
-        'SEQUENCER_BATCH_INBOX_ADDRESS': rollup_config['batch_inbox_address']
     })
 
     log.info('Testnet ready.')
@@ -217,6 +194,25 @@ def wait_for_rpc_server(url):
             log.info(f'Waiting for RPC server at {url}')
             time.sleep(1)
 
+
+def wait_for_node_server(url):
+    log.info(f'Waiting for Node server at {url}')
+
+    conn = http.client.HTTPConnection(url)
+    headers = {'Content-type': 'application/json'}
+    body = '{"jsonrpc":"2.0","method":"optimism_rollupConfig","params":[],"id":1}'
+
+    while True:
+        try:
+            conn.request('POST', '/', body, headers)
+            response = conn.getresponse()
+            conn.close()
+            if response.status < 300:
+                log.info(f'RPC server at {url} ready')
+                return
+        except Exception as e:
+            log.info(f'Waiting for RPC server at {url}')
+            time.sleep(1)
 
 def run_command(args, check=True, shell=False, cwd=None, env=None):
     env = env if env else {}

@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@polkadot/api": "^10.11.1",
+    "@polkadot/util-crypto": "^12.6.1",
     "ethers": "^5.7.0"
   }
 }
