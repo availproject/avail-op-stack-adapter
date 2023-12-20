@@ -1,1 +1,6 @@
+# Ingnore for avail-optimism
+genesis.json
+rollup.json
+jwt.txt
+
 bin

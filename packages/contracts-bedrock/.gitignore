@@ -1,3 +1,7 @@
+# Ingnore for avail-optimism
+deployments/avail-optimism
+deploy-config/avail-optimism.json
+
 artifacts
 forge-artifacts
 cache

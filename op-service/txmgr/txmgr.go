@@ -155,6 +155,7 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		ctx, cancel = context.WithTimeout(ctx, m.cfg.TxSendTimeout)
 		defer cancel()
 	}
+
 	tx, err := m.craftTx(ctx, candidate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create the tx: %w", err)
