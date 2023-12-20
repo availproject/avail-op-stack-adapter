@@ -12,6 +12,22 @@
 
 ### Avail-OP-Stack Adapter integrates the Avail Data Availability layer in Optimism’s OP Stack to create a more optimised and efficient Optimistic Rollup architecture. It is designed to minimise the cost of posting L2 transactions over the DA layer with a better data availability guarantee
 
+## Contribution Guidelines
+
+### Rules
+
+Avail welcomes contributors from every background and skill level. Our mission is to build a community that's not only welcoming and friendly but also aligned with the best development practices. Interested in contributing to this project? Whether you've spotted an issue, have improvement ideas, or want to add new features, we'd love to have your input. Simply open a GitHub issue or submit a pull request to get started.
+
+1. Before asking any questions regarding how the project works, please read through all the documentation and install the project on your own local machine to try it and understand how it works. Please ask your questions in open channels (Github and [Telegram](https://t.me/avail_uncharted/)).
+
+2. To work on an issue, first, get approval from a maintainer or team member. You can request to be assigned by commenting on the issue in GitHub. This respects the efforts of others who may already be working on the same issue. Unapproved PRs may be declined.
+
+3. When assigned to an issue, it's expected that you're ready to actively work on it. After assignment, please provide a draft PR or update within one week. If you encounter delays, communicate with us to maintain your assignment.
+
+4. Got an idea or found a bug? Open an issue with the tags [New Feature] or [Bug]. Provide detailed information like reproduction steps (for bugs) or a basic feature proposal. The team will review and potentially assign you to it.
+
+5. Start a draft PR early in your development process, even with incomplete changes. This allows us to track progress, provide timely reviews, and assist you. Expect feedback on your drafts periodically.
+
 ## What is Avail?
 
 [Avail](https://www.availproject.org/) is a data availability focused blockchain. Its blocks are designed to provide secure, decentralized and low-cost blockspace for the data availability needs of other blockchains. It is built to meet the needs of next-generation, trust-minimized applications and sovereign rollups. Avail's strengths lie in its innovative security approach, which allows light clients to easily verify data availability through sampling over a peer-to-peer network. Avail’s modular approach simplifies blockchain integration for developers, as they no longer need to worry about validator sets or tokenomics. With Avail's unparalleled data availability interface and powerful security capabilities, developers can create zero-knowledge or fraud-proof-based blockchain applications with greater efficiency and ease.
