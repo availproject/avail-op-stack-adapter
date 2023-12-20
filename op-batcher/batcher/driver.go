@@ -380,20 +380,22 @@ func (l *BatchSubmitter) publishTxToL1(ctx context.Context, queue *txmgr.Queue[t
 		return err
 	}
 
-	l.sendTransaction(txdata, queue, receiptsCh)
+	if err = l.sendTransaction(txdata, queue, receiptsCh); err != nil {
+		return err
+	}
 	return nil
 }
 
 // sendTransaction creates & submits a transaction to the batch inbox address with the given `data`.
 // It currently uses the underlying `txmgr` to handle transaction sending & price management.
 // This is a blocking method. It should not be called concurrently.
-func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txData], receiptsCh chan txmgr.TxReceipt[txData]) {
+func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txData], receiptsCh chan txmgr.TxReceipt[txData]) error {
 	// Do the gas estimation offline. A value of 0 will cause the [txmgr] to estimate the gas limit.
 	data := txdata.Bytes()
 	intrinsicGas, err := core.IntrinsicGas(data, nil, false, true, true, false)
 	if err != nil {
 		l.log.Error("Failed to calculate intrinsic gas", "error", err)
-		return
+		return err
 	}
 
 	candidate := txmgr.TxCandidate{
@@ -407,13 +409,15 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txDat
 		refData, err := l.AvailDA.SubmitTxDataAndGetRef(data)
 		if err != nil {
 			l.log.Error("failed to submit txData on avail", "err", err)
-			return
+			//panic("failed to submit txData on avail")
+			return err
 		}
 		//To add reference on ethereum layer
 		candidate.TxData = refData
 	}
 
 	queue.Send(txdata, candidate, receiptsCh)
+	return nil
 }
 
 func (l *BatchSubmitter) handleReceipt(r txmgr.TxReceipt[txData]) {

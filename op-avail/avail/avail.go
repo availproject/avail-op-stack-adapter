@@ -86,5 +86,6 @@ func (a *AvailDA) GetTxDataByDARef(RefData []byte) ([]byte, error) {
 		return []byte{}, fmt.Errorf("failed to get block extrinsic data, error:%v", err)
 	}
 
+	log.Info("Successfully fetch the batch data from Avail")
 	return txData, nil
 }

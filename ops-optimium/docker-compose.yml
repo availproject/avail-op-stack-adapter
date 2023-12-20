@@ -36,7 +36,7 @@ services:
       context: ../
       dockerfile: ./op-node/Dockerfile
     command: >
-      op-node --l1=${L1_RPC_URL} --l2=http://op-geth:8551 --l2.jwt-secret=/config/test-jwt-secret.txt --sequencer.enabled --sequencer.l1-confs=0 --verifier.l1-confs=0 --p2p.sequencer.key=${SEQ_PRIVATE_KEY} --rollup.config=/rollup.json --avail-da.config=/avail-config.json --rpc.addr=0.0.0.0 --rpc.port=8545 --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003 --p2p.scoring.peers=light --p2p.ban.peers=true --snapshotlog.file=/op_log/snapshot.log --p2p.priv.path=/config/p2p-node-key.txt --metrics.enabled --metrics.addr=0.0.0.0 --metrics.port=7300 --pprof.enabled --rpc.enable-admin
+      op-node --l2=http://op-geth:8551 --l2.jwt-secret=/config/test-jwt-secret.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=./rollup.json --avail-da.config=/avail-config.json --rpc.addr=0.0.0.0 --rpc.port=8545 --p2p.disable --rpc.enable-admin --metrics.enabled --metrics.addr=0.0.0.0 --metrics.port=7300 --p2p.sequencer.key=${SEQ_PRIVATE_KEY} --l1=${L1_RPC_URL} --snapshotlog.file=/op_log/snapshot.log
     ports:
       - "7545:8545"
       - "9003:9003"
@@ -82,9 +82,7 @@ services:
       OP_PROPOSER_POLL_INTERVAL: 10s
       OP_PROPOSER_NUM_CONFIRMATIONS: 1
       OP_PROPOSER_PRIVATE_KEY: ${PROP_PRIVATE_KEY}
-      OP_PROPOSER_L2_OUTPUT_HD_PATH: "m/44'/60'/0'/0/1"
       OP_PROPOSER_L2OO_ADDRESS: "${L2OO_ADDRESS}"
-      OP_PROPOSER_PPROF_ENABLED: "true"
       OP_PROPOSER_METRICS_ENABLED: "true"
       OP_PROPOSER_ALLOW_NON_FINALIZED: "true"
 
