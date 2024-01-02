@@ -133,8 +133,18 @@ func DataFromEVMTransactions(config *rollup.Config, availDAFetcher AvailDAFetche
 }
 
 func DataFromAvailDA(availDAFetcher AvailDAFetcher, data []byte, log log.Logger) []byte {
-	// Get Transaction data from da reference
-	txData, err := availDAFetcher.GetTxDataByDARef(data)
+
+	var txData []byte
+	var err error
+	// TODO: Improve this retry logic
+	for i := 0; i < 3; i++ {
+		// Get Transaction data from da reference
+		txData, err = availDAFetcher.GetTxDataByDARef(data)
+		if err == nil {
+			break
+		}
+	}
+
 	if err != nil {
 		log.Error("unable to retrieve the data back from Avail", "err", err)
 		panic("Failed to get TxData from Avail block ref")

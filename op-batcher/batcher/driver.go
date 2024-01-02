@@ -405,8 +405,17 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txDat
 	}
 
 	if l.Rollup.DAEnabled {
-		// Submit transaction data on Data and get reference to submit on ethereum layer
-		refData, err := l.AvailDA.SubmitTxDataAndGetRef(data)
+
+		var refData []byte
+		// TODO: Improve this retry logic
+		for i := 0; i < 3; i++ {
+			// Submit transaction data on Data and get reference to submit on ethereum layer
+			refData, err = l.AvailDA.SubmitTxDataAndGetRef(data)
+			if err == nil {
+				break
+			}
+		}
+
 		if err != nil {
 			l.log.Error("failed to submit txData on avail", "err", err)
 			//panic("failed to submit txData on avail")

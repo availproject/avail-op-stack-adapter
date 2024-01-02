@@ -78,7 +78,7 @@ AVL_OP_AVAIL_SEED_PHRASE=$(echo "$wallet0" | awk 'NR==3  { print $0}')
 avl_wallet=$(cat << EOL
 {
   "seed" : "$AVL_OP_AVAIL_SEED_PHRASE",
-  "api_url" : "wss://kate.avail.tools:443/ws",
+  "api_url" : "wss://goldberg.avail.tools/ws",
   "app_id": 1
 }
 EOL

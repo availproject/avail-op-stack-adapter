@@ -109,7 +109,7 @@ func SubmitDataAndWatch(api *gsrpc.SubstrateAPI, config config.DAConfig, data []
 	log.Info("Tx batch is submitted to Avail", "length", len(data), "address", keyringPair.Address, "appID", appID)
 
 	defer sub.Unsubscribe()
-	timeout := time.After(100 * time.Second)
+	timeout := time.After(500 * time.Second)
 	for {
 		select {
 		case status := <-sub.Chan():
