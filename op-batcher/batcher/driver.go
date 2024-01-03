@@ -414,6 +414,7 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txDat
 			if err == nil {
 				break
 			}
+			l.log.Error("Failed to Submit Batch Data on Avail", "attemp", i+1)
 		}
 
 		if err != nil {

@@ -143,6 +143,7 @@ func DataFromAvailDA(availDAFetcher AvailDAFetcher, data []byte, log log.Logger)
 		if err == nil {
 			break
 		}
+		log.Error("Failed to retreive Batch Data from Avail", "attemp", i+1)
 	}
 
 	if err != nil {

@@ -76,6 +76,9 @@ func SubmitDataAndWatch(api *gsrpc.SubstrateAPI, config config.DAConfig, data []
 	ok, err := api.RPC.State.GetStorageLatest(key, &accountInfo)
 	if err != nil || !ok {
 		fmt.Printf("cannot get latest storage: error:%v", err)
+		if !ok && err == nil {
+			err = fmt.Errorf("cannot get latest stotage")
+		}
 		return types.AvailBlockRef{}, err
 	}
 
