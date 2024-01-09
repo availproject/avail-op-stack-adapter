@@ -149,7 +149,7 @@ def testnet_deploy(paths):
     run_command(['docker-compose', 'up', '-d', 'op-geth'], cwd=paths.ops_optimium_dir, env={
         'PWD': paths.ops_optimium_dir
     })
-    wait_up(9545)
+    wait_up(9545, wait_secs=120)
     wait_for_rpc_server('127.0.0.1:9545')
 
     log.info('Bringing up op-node(L2 consensus client)')
@@ -159,7 +159,7 @@ def testnet_deploy(paths):
         'SEQ_PRIVATE_KEY': wallets['Sequencer']['Private key'].split('x')[1],
     })
     log.info("Its working")
-    wait_up(7545)
+    wait_up(7545, wait_secs=120)
     wait_for_node_server('127.0.0.1:7545')
 
 
