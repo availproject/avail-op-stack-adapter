@@ -54,6 +54,7 @@ services:
     depends_on:
       - op-geth
       - op-node
+    restart: on-failure
     build:
       context: ../
       dockerfile: ./op-batcher/Dockerfile
