@@ -16,6 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.op-geth
+    restart: on-failure
     ports:
       - "9545:8545"
       - "8060:6060"
@@ -35,6 +36,7 @@ services:
     build:
       context: ../
       dockerfile: ./op-node/Dockerfile
+    restart: on-failure
     command: >
       op-node --l2=http://op-geth:8551 --l2.jwt-secret=/config/test-jwt-secret.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=./rollup.json --avail-da.config=/avail-config.json --rpc.addr=0.0.0.0 --rpc.port=8545 --p2p.disable --rpc.enable-admin --metrics.enabled --metrics.addr=0.0.0.0 --metrics.port=7300 --p2p.sequencer.key=${SEQ_PRIVATE_KEY} --l1=${L1_RPC_URL} --snapshotlog.file=/op_log/snapshot.log
     ports:
@@ -74,6 +76,7 @@ services:
     build:
       context: ../
       dockerfile: ./op-proposer/Dockerfile
+    restart: on-failure
     ports:
       - "6062:6060"
       - "7302:7300"
