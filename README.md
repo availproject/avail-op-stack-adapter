@@ -1,4 +1,5 @@
-
+> [!WARNING]
+> This repository is **DEPRECATED**, Check out our new version with Optimism's Approval [docs](https://github.com/availproject/optimism-Alt-DA-Avail)
 <div align="center">
   <br />
   <br />
